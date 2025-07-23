@@ -97,7 +97,7 @@ export default function DashboardPage() {
           >
             <motion.div 
               className="w-full max-w-2xl"
-              onClick={(e) => e.stopPropagation()} // Prevents modal from closing when clicking inside it
+              onClick={(e: React.MouseEvent) => e.stopPropagation()} // Prevents modal from closing when clicking inside it
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
