@@ -19,7 +19,7 @@ export default function HomePage() {
 
   useEffect(() => {
     const generatePoints = () => {
-      const newPoints = [...Array(10).keys()].map(() => ({
+      const newPoints = Array.from({ length: 10 }).map(() => ({
         lat: (Math.random() - 0.5) * 180,
         lng: (Math.random() - 0.5) * 360,
         size: Math.random() * 0.4,

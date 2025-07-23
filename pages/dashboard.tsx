@@ -97,9 +97,8 @@ export default function DashboardPage() {
           >
             <motion.div 
               className="w-full max-w-2xl"
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
               initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
             >
               <PostCard post={selectedPost} />
             </motion.div>
