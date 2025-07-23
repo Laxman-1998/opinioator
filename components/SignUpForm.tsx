@@ -1,30 +1,51 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import Link from 'next/link'; // We need this for the new message
 
 const SignUpForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState('');
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(''); // New state for specific error messages
 
   const handleSignUp = async (event: React.FormEvent) => {
     event.preventDefault();
-    setMessage('');
+    setErrorMessage(''); // Clear previous errors
     setIsLoading(true);
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: email,
       password: password,
     });
 
     if (error) {
-      setMessage(`Error: ${error.message}`);
+      setErrorMessage(error.message);
+    } else if (data.user?.aud === 'authenticated') {
+      // This is the new, smart check. 'authenticated' means the user already exists.
+      setErrorMessage('This email is already registered.');
     } else {
-      setMessage('Success! Please check your email to confirm your account.');
+      // This is a successful new signup.
+      setIsSubmitted(true);
     }
 
     setIsLoading(false);
   };
+
+  if (isSubmitted) {
+    return (
+      <div className="text-center p-8 bg-slate-900/50 rounded-lg border border-slate-800 animate-fade-in max-w-md mx-auto">
+        <h3 className="text-2xl font-bold text-white">✅ Almost there!</h3>
+        <p className="text-slate-300 mt-4">
+          We've sent a confirmation link to:
+        </p>
+        <p className="text-white font-semibold mt-1">{email}</p>
+        <p className="text-slate-400 mt-4 text-sm">
+          Please check your inbox (and spam folder) to activate your account.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSignUp} className="w-full max-w-md mx-auto">
@@ -52,7 +73,18 @@ const SignUpForm = () => {
         >
           {isLoading ? 'Creating Account...' : 'Create Account'}
         </button>
-        {message && <p className="text-center text-sm text-slate-300 mt-2">{message}</p>}
+
+        {/* New Error Display Logic */}
+        {errorMessage && (
+          <p className="text-center text-sm text-red-400 mt-3">
+            {errorMessage}{' '}
+            {errorMessage.includes('registered') && (
+              <Link href="/login">
+                <span className="font-bold hover:underline cursor-pointer">Log In here.</span>
+              </Link>
+            )}
+          </p>
+        )}
       </div>
     </form>
   );
