@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 
 const SignUpForm = () => {
   const [email, setEmail] = useState('');
@@ -20,13 +21,16 @@ const SignUpForm = () => {
     });
 
     if (error) {
-      setErrorMessage(error.message);
-    } else if (data.user && data.user.identities && data.user.identities.length === 0 && data.session === null) {
-      // This is the key check: if a user object is returned but has no identities and no session,
-      // it means the email exists but is unconfirmed.
-      setErrorMessage('This email is already registered but not confirmed. We have re-sent the confirmation email.');
+      // Supabase provides an error message if the user is already registered.
+      // We check for that specific message.
+      if (error.message.includes("User already registered")) {
+        setErrorMessage("This email is already registered.");
+      } else {
+        setErrorMessage(error.message);
+      }
     } else {
-      // This is a successful new signup.
+      // If there is no error, it's either a new user or an unconfirmed user.
+      // In both cases, the correct action is to show the confirmation prompt.
       setIsSubmitted(true);
     }
 
@@ -51,7 +55,6 @@ const SignUpForm = () => {
   return (
     <form onSubmit={handleSignUp} className="w-full max-w-md mx-auto">
       <div className="flex flex-col gap-4">
-        {/* Input fields are the same */}
         <input
           type="email"
           value={email}
@@ -79,9 +82,11 @@ const SignUpForm = () => {
         {errorMessage && (
           <p className="text-center text-sm text-red-400 mt-3">
             {errorMessage}{' '}
-            <Link href="/login">
-              <span className="font-bold hover:underline cursor-pointer">Try logging in.</span>
-            </Link>
+            {errorMessage.includes('registered') && (
+              <Link href="/login">
+                <span className="font-bold hover:underline cursor-pointer">Log In here.</span>
+              </Link>
+            )}
           </p>
         )}
       </div>
