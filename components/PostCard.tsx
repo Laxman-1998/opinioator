@@ -1,6 +1,13 @@
+// components/PostCard.tsx
+
 import { useState, useEffect } from 'react';
 import Slider from 'rc-slider';
-import { Post } from '../lib/types'; // Import our new centralized Post type
+
+// 1. Import the new Database types from the auto-generated file
+import type { Database } from '../lib/database.types';
+
+// 2. Define our Post type using the official 'Row' type from Supabase
+type Post = Database['public']['Tables']['posts']['Row'];
 
 type PostCardProps = {
   post: Post;
@@ -22,10 +29,13 @@ const PostCard = ({ post }: PostCardProps) => {
     if (userVote) return;
     localStorage.setItem(`voted_on_post_${post.id}`, voteType);
     setUserVote(voteType);
+
+    // 3. SAFELY update the local state, handling potential nulls
     setCurrentPost(prevPost => ({
       ...prevPost,
-      [`${voteType}_count`]: prevPost[`${voteType}_count`] + 1
+      [`${voteType}_count`]: (prevPost[`${voteType}_count`] ?? 0) + 1
     }));
+
     await fetch('/api/vote', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -39,8 +49,11 @@ const PostCard = ({ post }: PostCardProps) => {
     handleVote(voteType);
   };
 
-  const totalVotes = currentPost.agree_count + currentPost.disagree_count;
-  const agreePercentage = totalVotes === 0 ? 50 : Math.round((currentPost.agree_count / totalVotes) * 100);
+  // 4. SAFELY calculate votes, providing 0 as a fallback for null
+  const agreeCount = currentPost.agree_count ?? 0;
+  const disagreeCount = currentPost.disagree_count ?? 0;
+  const totalVotes = agreeCount + disagreeCount;
+  const agreePercentage = totalVotes === 0 ? 50 : Math.round((agreeCount / totalVotes) * 100);
 
   return (
     <div className="bg-slate-900/50 p-5 rounded-lg border border-slate-800">
@@ -50,14 +63,12 @@ const PostCard = ({ post }: PostCardProps) => {
         {userVote ? (
           <div>
             <div className="flex justify-between text-sm font-bold mb-1">
-              {/* Use the custom label */}
               <span className="text-red-400">{currentPost.label_disagree}</span>
-              {/* Use the custom label */}
               <span className="text-green-400">{currentPost.label_agree}</span>
             </div>
             <div className="w-full bg-slate-700 rounded-full h-2.5">
-              <div 
-                className="bg-gradient-to-r from-red-500 via-purple-500 to-green-500 h-2.5 rounded-full" 
+              <div  
+                className="bg-gradient-to-r from-red-500 via-purple-500 to-green-500 h-2.5 rounded-full"  
                 style={{ width: `${agreePercentage}%` }}
               ></div>
             </div>
@@ -66,9 +77,7 @@ const PostCard = ({ post }: PostCardProps) => {
         ) : (
           <div>
             <div className="flex justify-between text-sm font-bold mb-1">
-              {/* Use the custom label */}
               <span className="text-red-400">{currentPost.label_disagree}</span>
-              {/* Use the custom label */}
               <span className="text-green-400">{currentPost.label_agree}</span>
             </div>
             <Slider
