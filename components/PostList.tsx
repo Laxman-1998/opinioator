@@ -1,13 +1,14 @@
+// components/PostList.tsx
+
 import PostCard from './PostCard';
-import { Post } from '../lib/types';
+// 1. Import the new Database types
+import type { Database } from '../lib/database.types';
 
-type PostListProps = {
-  posts: Post[];
-};
+// 2. Define our Post type using the official 'Row' type from Supabase
+type Post = Database['public']['Tables']['posts']['Row'];
 
-const PostList = ({ posts }: PostListProps) => {
+const PostList = ({ posts }: { posts: Post[] }) => {
   return (
-    // The list is now just a simple container
     <div className="w-full flex flex-col gap-4">
       {posts.map((post) => (
         <PostCard key={post.id} post={post} />
