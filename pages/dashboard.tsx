@@ -9,8 +9,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 // This is the small card for each item on the timeline
 const TimelineCard = ({ post, onClick }: { post: Post, onClick: () => void }) => {
-  const totalVotes = post.agree_count + post.disagree_count;
-  const agreePercentage = totalVotes === 0 ? 50 : Math.round((post.agree_count / totalVotes) * 100);
+  // The safe way to handle potential nulls
+  const agreeCount = post.agree_count ?? 0;
+  const disagreeCount = post.disagree_count ?? 0;
+  const totalVotes = agreeCount + disagreeCount;
+  const agreePercentage = totalVotes === 0 ? 50 : Math.round((agreeCount / totalVotes) * 100);Math.round((post.agree_count / totalVotes) * 100);
 
   return (
     <motion.div 
