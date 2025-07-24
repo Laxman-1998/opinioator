@@ -13,7 +13,7 @@ const TimelineCard = ({ post, onClick }: { post: Post, onClick: () => void }) =>
   const agreeCount = post.agree_count ?? 0;
   const disagreeCount = post.disagree_count ?? 0;
   const totalVotes = agreeCount + disagreeCount;
-  const agreePercentage = totalVotes === 0 ? 50 : Math.round((agreeCount / totalVotes) * 100);Math.round((post.agree_count / totalVotes) * 100);
+  const agreePercentage = totalVotes === 0 ? 50 : Math.round((agreeCount / totalVotes) * 100);
 
   return (
     <motion.div 
