@@ -5,7 +5,8 @@ import PostList from '../components/PostList';
 import SkeletonPost from '../components/SkeletonPost'; // Import our new skeleton
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../lib/auth';
-import { Post } from '../lib/types';
+import type { Database } from '../lib/database.types';
+type Post = Database['public']['Tables']['posts']['Row'];
 
 export default function FeedPage() {
   const { user } = useAuth();
