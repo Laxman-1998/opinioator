@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import Link from 'next/link'; // We need this for the new message
+import Link from 'next/link';
 
 const SignUpForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(''); // New state for specific error messages
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleSignUp = async (event: React.FormEvent) => {
     event.preventDefault();
-    setErrorMessage(''); // Clear previous errors
+    setErrorMessage('');
     setIsLoading(true);
 
     const { data, error } = await supabase.auth.signUp({
@@ -21,8 +21,8 @@ const SignUpForm = () => {
 
     if (error) {
       setErrorMessage(error.message);
-    } else if (data.user?.aud === 'authenticated') {
-      // This is the new, smart check. 'authenticated' means the user already exists.
+    } else if (data.user && data.user.identities && data.user.identities.length > 0) {
+      // This is the new, more reliable check to see if a user already exists.
       setErrorMessage('This email is already registered.');
     } else {
       // This is a successful new signup.
@@ -74,7 +74,6 @@ const SignUpForm = () => {
           {isLoading ? 'Creating Account...' : 'Create Account'}
         </button>
 
-        {/* New Error Display Logic */}
         {errorMessage && (
           <p className="text-center text-sm text-red-400 mt-3">
             {errorMessage}{' '}
