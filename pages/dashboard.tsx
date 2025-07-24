@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../lib/auth';
-import { Post } from '../lib/types';
+import type { Database } from '../lib/database.types';
+type Post = Database['public']['Tables']['posts']['Row'];
 import PostCard from '../components/PostCard';
 import { motion, AnimatePresence } from 'framer-motion';
 
