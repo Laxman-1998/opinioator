@@ -21,9 +21,10 @@ const SignUpForm = () => {
 
     if (error) {
       setErrorMessage(error.message);
-    } else if (data.user && data.user.identities && data.user.identities.length > 0) {
-      // This is the new, more reliable check to see if a user already exists.
-      setErrorMessage('This email is already registered.');
+    } else if (data.user && data.user.identities && data.user.identities.length === 0 && data.session === null) {
+      // This is the key check: if a user object is returned but has no identities and no session,
+      // it means the email exists but is unconfirmed.
+      setErrorMessage('This email is already registered but not confirmed. We have re-sent the confirmation email.');
     } else {
       // This is a successful new signup.
       setIsSubmitted(true);
@@ -50,6 +51,7 @@ const SignUpForm = () => {
   return (
     <form onSubmit={handleSignUp} className="w-full max-w-md mx-auto">
       <div className="flex flex-col gap-4">
+        {/* Input fields are the same */}
         <input
           type="email"
           value={email}
@@ -77,11 +79,9 @@ const SignUpForm = () => {
         {errorMessage && (
           <p className="text-center text-sm text-red-400 mt-3">
             {errorMessage}{' '}
-            {errorMessage.includes('registered') && (
-              <Link href="/login">
-                <span className="font-bold hover:underline cursor-pointer">Log In here.</span>
-              </Link>
-            )}
+            <Link href="/login">
+              <span className="font-bold hover:underline cursor-pointer">Try logging in.</span>
+            </Link>
           </p>
         )}
       </div>
