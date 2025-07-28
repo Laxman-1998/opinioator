@@ -4,13 +4,9 @@ import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../lib/auth';
 import { Post } from '../lib/types';
 import PostCard from '../components/PostCard';
+import DashboardPostCard from '../components/DashboardPostCard';
 import { motion, AnimatePresence } from 'framer-motion';
-import ReactFlow, { Background, Controls, Node } from 'reactflow';
-import MindMapNode from '../components/MindMapNode';
-import { forceSimulation, forceManyBody, forceCenter, SimulationNodeDatum } from 'd3-force';
 import Link from 'next/link';
-
-const nodeTypes = { mindMapNode: MindMapNode };
 
 const backdropVariants = { hidden: { opacity: 0 }, visible: { opacity: 1 } };
 const modalVariants = {
@@ -25,7 +21,6 @@ export default function DashboardPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
-  const [nodes, setNodes] = useState<Node[]>([]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -43,66 +38,30 @@ export default function DashboardPage() {
     if (user) getMyPosts();
   }, [user, authLoading, router]);
 
-  useEffect(() => {
-    if (posts.length > 0) {
-      // Correctly create the data for the simulation
-      const simulationNodes = posts.map(post => ({
-        ...post, // Keep all original post data
-      }));
-
-      const simulation = forceSimulation(simulationNodes as SimulationNodeDatum[])
-        .force('charge', forceManyBody().strength(-250))
-        .force('center', forceCenter(150, 150))
-        .stop();
-
-      for (let i = 0; i < 200; ++i) simulation.tick();
-
-      const finalNodes = simulationNodes.map((postNode) => {
-        const originalPost = posts.find(p => p.id === (postNode as any).id);
-        return {
-          id: (postNode as any).id.toString(),
-          type: 'mindMapNode',
-          data: { post: originalPost, onClick: () => setSelectedPost(originalPost!) },
-          position: { x: (postNode as any).x || 0, y: (postNode as any).y || 0 },
-        }
-      });
-      setNodes(finalNodes as Node[]);
-    }
-  }, [posts]);
-
-  if (authLoading) {
-    return <p className="text-center">Loading...</p>;
-  }
-  
   return (
-    <>
-      <div>
-        <h2 className="text-3xl font-bold text-white mb-8">My Mind Map</h2>
-        <div className="w-full h-[70vh] bg-slate-900/50 rounded-lg border border-slate-800">
-          {loading ? (
-            <div className="w-full h-full rounded-lg animate-pulse bg-slate-800" />
-          ) : posts.length > 0 ? (
-            <ReactFlow
-              nodes={nodes}
-              nodeTypes={nodeTypes}
-              fitView
-              minZoom={0.1}
-            >
-              <Background />
-              <Controls />
-            </ReactFlow>
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="text-center p-12 border-2 border-dashed border-slate-800 rounded-lg">
-                <h3 className="text-xl font-bold text-white">Your mind map is empty.</h3>
-                <p className="text-slate-400 mt-2">
-                  <Link href="/feed"><span className="text-blue-400 hover:underline cursor-pointer">Head to the feed</span></Link> to share a thought.
-                </p>
-              </div>
-            </div>
-          )}
+    <div className="relative">
+      {/* Starfield Background */}
+      <div className="starfield stars1 -z-20"></div>
+      <div className="starfield stars2 -z-20"></div>
+
+      <h2 className="text-3xl font-bold text-white mb-8">My Posts</h2>
+      
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+           <div className="h-48 w-full bg-slate-800 rounded-xl animate-pulse"></div>
+           <div className="h-48 w-full bg-slate-800 rounded-xl animate-pulse"></div>
         </div>
-      </div>
+      ) : posts.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {posts.map((post) => (
+            <DashboardPostCard key={post.id} post={post} onClick={() => setSelectedPost(post)} />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center p-12 border-2 border-dashed border-slate-800 rounded-lg">
+            <h3 className="text-xl font-bold text-white">You haven't posted any thoughts yet.</h3>
+        </div>
+      )}
 
       <AnimatePresence>
         {selectedPost && (
@@ -119,11 +78,11 @@ export default function DashboardPage() {
               onClick={(e) => e.stopPropagation()}
               variants={modalVariants}
             >
-              <PostCard post={selectedPost} />
+              <PostCard post={selectedPost} isLink={false} />
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 }
