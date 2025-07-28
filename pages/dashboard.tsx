@@ -7,7 +7,7 @@ import PostCard from '../components/PostCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 
-// We are keeping the TimelineCard component inside this file
+// This is the small, clickable card for each item on our new timeline
 const TimelineCard = ({ post, onClick }: { post: Post; onClick: () => void }) => {
   const agreeCount = post.agree_count ?? 0;
   const disagreeCount = post.disagree_count ?? 0;
@@ -19,7 +19,7 @@ const TimelineCard = ({ post, onClick }: { post: Post; onClick: () => void }) =>
       className="flex-shrink-0 w-80 h-40 p-4 bg-slate-900/50 border border-slate-800 rounded-lg cursor-pointer flex flex-col justify-between"
       onClick={onClick}
       whileHover={{ scale: 1.05, borderColor: '#3b82f6' }}
-      layout // Add this property for smoother animations
+      layout
     >
       <p className="text-slate-300 text-sm overflow-hidden text-ellipsis">{post.content}</p>
       <div>
@@ -30,6 +30,18 @@ const TimelineCard = ({ post, onClick }: { post: Post; onClick: () => void }) =>
       </div>
     </motion.div>
   );
+};
+
+// These are predefined animation variants for a more robust modal
+const backdropVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1 },
+};
+
+const modalVariants = {
+  hidden: { y: "50px", opacity: 0 },
+  visible: { y: "0", opacity: 1, transition: { type: "spring", stiffness: 100 } },
+  exit: { y: "50px", opacity: 0 },
 };
 
 
@@ -71,7 +83,7 @@ export default function DashboardPage() {
       
       {posts.length > 0 ? (
         <div className="flex gap-6 pb-6 overflow-x-auto">
-          {posts.map((post) => (
+          {posts.map((post, i) => (
             <TimelineCard key={post.id} post={post} onClick={() => setSelectedPost(post)} />
           ))}
         </div>
@@ -81,21 +93,21 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* NEW ROBUST MODAL IMPLEMENTATION */}
       <AnimatePresence>
         {selectedPost && (
           <motion.div 
             className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            variants={backdropVariants}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
             onClick={() => setSelectedPost(null)}
           >
             <motion.div 
               className="w-full max-w-2xl"
               onClick={(e) => e.stopPropagation()}
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1, transition: { delay: 0.1 } }}
-              exit={{ scale: 0.9, opacity: 0 }}
+              variants={modalVariants}
             >
               <PostCard post={selectedPost} />
             </motion.div>
