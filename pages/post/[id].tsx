@@ -1,11 +1,12 @@
 import { useRouter } from 'next/router';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../lib/auth';
 import { Post, Comment } from '../../lib/types';
 import PostCard from '../../components/PostCard';
 import CommentList from '../../components/CommentList';
 import CommentForm from '../../components/CommentForm';
+import Link from 'next/link';
 
 const PostPage = () => {
   const { user, loading: authLoading } = useAuth();
@@ -15,56 +16,70 @@ const PostPage = () => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
+  const [commentSubmitted, setCommentSubmitted] = useState(false); // State for non-owner success message
+
+  const fetchPostAndComments = async () => {
+    if (!id) return;
+
+    setLoading(true);
+    const { data: postData } = await supabase.from('posts').select('*').eq('id', id).single();
+    
+    if (postData) {
+      setPost(postData);
+      if (user && postData.user_id === user.id) {
+        setIsOwner(true);
+        const { data: commentsData } = await supabase.from('comments').select('*').eq('post_id', id).order('created_at');
+        if (commentsData) setComments(commentsData);
+      }
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const fetchPostAndComments = async () => {
-      if (!id) return;
-      setLoading(true);
-
-      const { data: postData } = await supabase.from('posts').select('*').eq('id', id).single();
-      
-      if (postData) {
-        setPost(postData);
-        if (user && postData.user_id === user.id) {
-          setIsOwner(true);
-          const { data: commentsData } = await supabase.from('comments').select('*').eq('post_id', id).order('created_at');
-          if (commentsData) setComments(commentsData);
-        }
-      }
-      setLoading(false);
-    };
-
     if (!authLoading) {
       fetchPostAndComments();
     }
   }, [id, user, authLoading]);
 
-  // We need a memoized version of the fetch function to pass down
-  const refreshData = useCallback(() => {
-     if (!authLoading) {
-        // ... (Logic for refreshing data could be added here)
-     }
-  }, [authLoading]);
-
-
   if (loading) return <p className="text-center">Loading post...</p>;
   if (!post) return <p className="text-center">Post not found.</p>;
 
-  // This is a more complex scenario now. The easiest way is to just refetch all data.
-  // Let's simplify the page for now.
-  // The original version was fine, I'll just move the function inside.
-  
-  // Re-checking the previous code. It was fine. Let me just provide the final version of `PostCard` and `types.ts`
-  // and tell them to push. The warning is not a build-breaking error. The `Type error` is.
-  // Let's keep the user focused on the CRITICAL fix.
-  
-  // New Plan:
-  // 1. Acknowledge the Type Error. Explain it.
-  // 2. Provide the fix for `lib/types.ts`.
-  // 3. Provide the fix for `components/PostCard.tsx`.
-  // 4. Tell them the warning is minor and not build-breaking, and we can ignore it for now to stay focused.
-  // 5. Instruct to Commit & Push.
-  
-  // Okay, this is a better plan. It reduces the number of files the user has to touch and focuses on the actual error.
+  return (
+    <div className="w-full flex flex-col gap-6">
+      <PostCard post={post} />
+      
+      {isOwner ? (
+        // If you are the owner, show the private comments section
+        <div className="border-t-2 border-dashed border-slate-800 pt-6">
+          <h3 className="text-xl font-bold text-white mb-4">Private Comments ({comments.length})</h3>
+          <CommentList comments={comments} />
+          <CommentForm postId={post.id} onCommentSuccess={fetchPostAndComments} />
+        </div>
+      ) : user ? (
+        // If you are logged in but NOT the owner
+        <div className="border-t-2 border-dashed border-slate-800 pt-6">
+          {commentSubmitted ? (
+            <div className="text-center p-8 bg-green-900/50 rounded-lg border border-green-700">
+              <p>Your private comment has been sent to the author.</p>
+            </div>
+          ) : (
+            <>
+              <h3 className="text-xl font-bold text-white mb-4">Leave a Private Comment</h3>
+              <CommentForm postId={post.id} onCommentSuccess={() => setCommentSubmitted(true)} />
+            </>
+          )}
+        </div>
+      ) : (
+         // If not logged in, show a prompt
+        <div className="text-center mt-6 pt-6 border-t-2 border-dashed border-slate-800">
+          <p className="text-slate-400">
+            <Link href="/login"><span className="text-blue-400 hover:underline">Log in</span></Link>
+            {' '}to leave a private comment.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
 
-  // Let me redraft the entire response with this new, simpler plan.
+export default PostPage;
