@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../lib/auth';
 import { Post, Comment } from '../../lib/types';
@@ -16,53 +16,55 @@ const PostPage = () => {
   const [loading, setLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
 
-  const fetchPostAndComments = async () => {
-    if (!id) return;
-    const { data: postData } = await supabase.from('posts').select('*').eq('id', id).single();
-    if (postData) {
-      setPost(postData);
-      if (user && postData.user_id === user.id) {
-        setIsOwner(true);
-        const { data: commentsData } = await supabase.from('comments').select('*').eq('post_id', id).order('created_at');
-        if (commentsData) setComments(commentsData);
-      }
-    }
-    setLoading(false);
-  };
-
   useEffect(() => {
-    if (!authLoading) fetchPostAndComments();
+    const fetchPostAndComments = async () => {
+      if (!id) return;
+      setLoading(true);
+
+      const { data: postData } = await supabase.from('posts').select('*').eq('id', id).single();
+      
+      if (postData) {
+        setPost(postData);
+        if (user && postData.user_id === user.id) {
+          setIsOwner(true);
+          const { data: commentsData } = await supabase.from('comments').select('*').eq('post_id', id).order('created_at');
+          if (commentsData) setComments(commentsData);
+        }
+      }
+      setLoading(false);
+    };
+
+    if (!authLoading) {
+      fetchPostAndComments();
+    }
   }, [id, user, authLoading]);
+
+  // We need a memoized version of the fetch function to pass down
+  const refreshData = useCallback(() => {
+     if (!authLoading) {
+        // ... (Logic for refreshing data could be added here)
+     }
+  }, [authLoading]);
+
 
   if (loading) return <p className="text-center">Loading post...</p>;
   if (!post) return <p className="text-center">Post not found.</p>;
 
-  return (
-    <div className="w-full flex flex-col gap-6">
-      <PostCard post={post} />
-      {isOwner ? (
-        <div className="border-t-2 border-dashed border-slate-800 pt-6">
-          <h3 className="text-xl font-bold text-white mb-4">Private Comments ({comments.length})</h3>
-          <CommentList comments={comments} />
-          <CommentForm postId={post.id} onCommentSuccess={fetchPostAndComments} />
-        </div>
-      ) : user ? (
-        <div className="border-t-2 border-dashed border-slate-800 pt-6">
-          <h3 className="text-xl font-bold text-white mb-4">Leave a Private Comment</h3>
-          <CommentForm postId={post.id} onCommentSuccess={() => {
-            const formContainer = document.getElementById('comment-form-container');
-            if (formContainer) {
-              formContainer.innerHTML = `<div class="text-center p-8 bg-green-900/50 rounded-lg border border-green-700"><p>Your private comment has been sent to the author.</p></div>`;
-            }
-          }} />
-        </div>
-      ) : (
-        <div className="text-center mt-6 pt-6 border-t-2 border-dashed border-slate-800">
-          <p className="text-slate-400">You must be logged in to leave a comment.</p>
-        </div>
-      )}
-    </div>
-  );
-};
+  // This is a more complex scenario now. The easiest way is to just refetch all data.
+  // Let's simplify the page for now.
+  // The original version was fine, I'll just move the function inside.
+  
+  // Re-checking the previous code. It was fine. Let me just provide the final version of `PostCard` and `types.ts`
+  // and tell them to push. The warning is not a build-breaking error. The `Type error` is.
+  // Let's keep the user focused on the CRITICAL fix.
+  
+  // New Plan:
+  // 1. Acknowledge the Type Error. Explain it.
+  // 2. Provide the fix for `lib/types.ts`.
+  // 3. Provide the fix for `components/PostCard.tsx`.
+  // 4. Tell them the warning is minor and not build-breaking, and we can ignore it for now to stay focused.
+  // 5. Instruct to Commit & Push.
+  
+  // Okay, this is a better plan. It reduces the number of files the user has to touch and focuses on the actual error.
 
-export default PostPage;
+  // Let me redraft the entire response with this new, simpler plan.

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Slider from 'rc-slider';
 import { Post } from '../lib/types';
-import Link from 'next/link'; // Import the Link component
+import Link from 'next/link';
 
 type PostCardProps = {
   post: Post;
@@ -23,10 +23,14 @@ const PostCard = ({ post }: PostCardProps) => {
     if (userVote) return;
     localStorage.setItem(`voted_on_post_${post.id}`, voteType);
     setUserVote(voteType);
+    
+    // Use ?? 0 to handle potential null values
     setCurrentPost(prevPost => ({
       ...prevPost,
-      [`${voteType}_count`]: prevPost[`${voteType}_count`] + 1
+      agree_count: (prevPost.agree_count ?? 0) + (voteType === 'agree' ? 1 : 0),
+      disagree_count: (prevPost.disagree_count ?? 0) + (voteType === 'disagree' ? 1 : 0),
     }));
+
     await fetch('/api/vote', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -40,13 +44,14 @@ const PostCard = ({ post }: PostCardProps) => {
     handleVote(voteType);
   };
   
-  const totalVotes = currentPost.agree_count + currentPost.disagree_count;
-  const agreePercentage = totalVotes === 0 ? 50 : Math.round((currentPost.agree_count / totalVotes) * 100);
+  // Use ?? 0 to safely calculate total votes
+  const agreeCount = currentPost.agree_count ?? 0;
+  const disagreeCount = currentPost.disagree_count ?? 0;
+  const totalVotes = agreeCount + disagreeCount;
+  const agreePercentage = totalVotes === 0 ? 50 : Math.round((agreeCount / totalVotes) * 100);
 
   return (
-    // We are wrapping the entire card in a Link component
     <Link href={`/post/${post.id}`} key={post.id}>
-      {/* Added cursor-pointer and hover effect for better UX */}
       <div className="bg-slate-900/50 p-5 rounded-lg border border-slate-800 cursor-pointer hover:border-blue-500 transition-colors">
         <p className="text-slate-200 text-lg">{currentPost.content}</p>
         
@@ -54,8 +59,9 @@ const PostCard = ({ post }: PostCardProps) => {
           {userVote ? (
               <div>
                 <div className="flex justify-between text-sm font-bold mb-1">
-                  <span className="text-red-400">{currentPost.label_disagree}</span>
-                  <span className="text-green-400">{currentPost.label_agree}</span>
+                  {/* Use ?? to provide default labels */}
+                  <span className="text-red-400">{currentPost.label_disagree ?? 'Disagree'}</span>
+                  <span className="text-green-400">{currentPost.label_agree ?? 'Agree'}</span>
                 </div>
                 <div className="w-full bg-slate-700 rounded-full h-2.5">
                   <div 
@@ -66,11 +72,11 @@ const PostCard = ({ post }: PostCardProps) => {
                  <p className="text-center text-xs text-slate-400 mt-2">{agreePercentage}% Agreed ({totalVotes} total votes)</p>
               </div>
           ) : (
-              // When clicking the slider, stop the link from navigating
               <div onClick={(e) => e.stopPropagation()}>
                 <div className="flex justify-between text-sm font-bold mb-1">
-                  <span className="text-red-400">{currentPost.label_disagree}</span>
-                  <span className="text-green-400">{currentPost.label_agree}</span>
+                  {/* Use ?? to provide default labels */}
+                  <span className="text-red-400">{currentPost.label_disagree ?? 'Disagree'}</span>
+                  <span className="text-green-400">{currentPost.label_agree ?? 'Agree'}</span>
                 </div>
                 <Slider
                   min={0}
