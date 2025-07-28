@@ -1,11 +1,11 @@
 import { useCallback } from "react";
-import Particles from "react-tsparticles";
-import type { Engine } from "tsparticles-engine";
-import { loadFull } from "tsparticles";
+import Particles from "@tsparticles/react";
+import type { Engine } from "@tsparticles/engine";
+import { loadSlim } from "@tsparticles/slim";
 
 const SpaceBackground = () => {
   const particlesInit = useCallback(async (engine: Engine) => {
-    await loadFull(engine);
+    await loadSlim(engine);
   }, []);
 
   return (
@@ -40,16 +40,6 @@ const SpaceBackground = () => {
             color: {
               value: "#ffffff",
             },
-            links: {
-              color: "#ffffff",
-              distance: 150,
-              enable: false,
-              opacity: 0.1,
-              width: 1,
-            },
-            collisions: {
-              enable: false,
-            },
             move: {
               direction: "none",
               enable: true,
@@ -68,8 +58,8 @@ const SpaceBackground = () => {
               value: 100,
             },
             opacity: {
-              value: { min: 0.1, max: 0.5},
-               animation: {
+              value: { min: 0.1, max: 0.5 },
+              animation: {
                 enable: true,
                 speed: 1,
                 minimumValue: 0.1,

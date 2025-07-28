@@ -11,6 +11,8 @@
   "dependencies": {
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/supabase-js": "^2.52.0",
+    "@tsparticles/react": "^3.0.0",
+    "@tsparticles/slim": "^3.8.1",
     "d3-force": "^3.0.0",
     "framer-motion": "^12.23.6",
     "next": "^15.4.4",
@@ -19,9 +21,7 @@
     "react-dom": "^19.1.1",
     "react-globe.gl": "^2.34.0",
     "react-hot-toast": "^2.5.2",
-    "react-tsparticles": "^2.12.2",
-    "reactflow": "^11.11.4",
-    "tsparticles": "^3.8.1"
+    "reactflow": "^11.11.4"
   },
   "devDependencies": {
     "@types/d3-force": "^3.0.10",
