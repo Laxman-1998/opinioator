@@ -7,7 +7,7 @@ import PostCard from '../components/PostCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 
-// A new, improved card just for the dashboard grid
+// Updated card with a faster transition
 const DashboardPostCard = ({ post, onClick, index }: { post: Post; onClick: () => void; index: number }) => {
   const agreeCount = post.agree_count ?? 0;
   const disagreeCount = post.disagree_count ?? 0;
@@ -16,13 +16,12 @@ const DashboardPostCard = ({ post, onClick, index }: { post: Post; onClick: () =
   
   return (
     <motion.div
-      className="relative bg-slate-900/50 border border-slate-800 rounded-xl p-6 cursor-pointer group backdrop-blur-sm"
+      className="relative bg-slate-900/50 border border-slate-800 rounded-xl p-6 cursor-pointer group backdrop-blur-sm transition-all duration-200"
       onClick={onClick}
-      // New animation logic that works on load
       initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ type: 'spring', stiffness: 100, damping: 20, delay: index * 0.1 }}
-      whileHover={{ scale: 1.03, borderColor: '#3b82f6', boxShadow: '0 0 20px rgba(59, 130, 246, 0.3)' }}
+      transition={{ type: 'spring', stiffness: 100, damping: 20, delay: index * 0.05 }}
+      whileHover={{ scale: 1.03, borderColor: '#3b82f6', boxShadow: '0 0 20px rgba(59, 130, 246, 0.2)' }}
     >
       <p className="text-white font-semibold text-lg mb-4 line-clamp-4">{post.content}</p>
       <div className="flex justify-between items-end mt-auto">
@@ -72,9 +71,11 @@ export default function DashboardPage() {
     <div className="relative">
       {/* New Starfield Background */}
       <div className="fixed top-0 left-0 w-full h-full -z-10">
-        <div className="stars-bg stars1"></div>
-        <div className="stars-bg stars2"></div>
-        <div className="stars-bg stars3"></div>
+        <div className="stars-container">
+          <div className="stars1"></div>
+          <div className="stars2"></div>
+          <div className="stars3"></div>
+        </div>
       </div>
 
       <h2 className="text-3xl font-bold text-white mb-8">My Posts</h2>
