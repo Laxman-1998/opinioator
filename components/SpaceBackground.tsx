@@ -53,7 +53,7 @@ const SpaceBackground = () => {
             number: {
               density: {
                 enable: true,
-                area: 800, // This was the property that needed to be changed
+                value_area: 800, // This is the final, correct property name
               },
               value: 100,
             },
