@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../lib/auth';
@@ -11,8 +11,6 @@ import { forceSimulation, forceManyBody, forceCenter, SimulationNodeDatum } from
 import Link from 'next/link';
 
 const nodeTypes = { mindMapNode: MindMapNode };
-
-type SimulationPostNode = Post & SimulationNodeDatum & { id: string };
 
 const backdropVariants = { hidden: { opacity: 0 }, visible: { opacity: 1 } };
 const modalVariants = {
@@ -47,7 +45,10 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (posts.length > 0) {
-      const simulationNodes: Omit<SimulationPostNode, keyof SimulationNodeDatum>[] = posts.map(post => ({ ...post, id: post.id.toString() }));
+      // Correctly create the data for the simulation
+      const simulationNodes = posts.map(post => ({
+        ...post, // Keep all original post data
+      }));
 
       const simulation = forceSimulation(simulationNodes as SimulationNodeDatum[])
         .force('charge', forceManyBody().strength(-250))
@@ -57,9 +58,9 @@ export default function DashboardPage() {
       for (let i = 0; i < 200; ++i) simulation.tick();
 
       const finalNodes = simulationNodes.map((postNode) => {
-        const originalPost = posts.find(p => p.id.toString() === postNode.id);
+        const originalPost = posts.find(p => p.id === (postNode as any).id);
         return {
-          id: postNode.id,
+          id: (postNode as any).id.toString(),
           type: 'mindMapNode',
           data: { post: originalPost, onClick: () => setSelectedPost(originalPost!) },
           position: { x: (postNode as any).x || 0, y: (postNode as any).y || 0 },
