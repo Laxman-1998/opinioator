@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 
 const DashboardPostCard = ({ post, onClick, index }: { post: Post; onClick: () => void; index: number }) => {
+  // ... (This component code remains the same)
   const agreeCount = post.agree_count ?? 0;
   const disagreeCount = post.disagree_count ?? 0;
   const totalVotes = agreeCount + disagreeCount;
@@ -51,6 +52,7 @@ export default function DashboardPage() {
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
 
   useEffect(() => {
+    // ... (This useEffect logic remains the same)
     if (!authLoading && !user) {
       router.push('/login');
       return;
@@ -68,6 +70,21 @@ export default function DashboardPage() {
 
   return (
     <div className="relative">
+      {/* We are adding the background and its styles directly here */}
+      <style jsx global>{`
+        body {
+          background: linear-gradient(-45deg, #0B1120, #1F2937, #111827, #374151);
+          background-size: 400% 400%;
+          animation: gradient 25s ease infinite;
+        }
+
+        @keyframes gradient {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+      `}</style>
+
       <h2 className="text-3xl font-bold text-white mb-8">My Posts</h2>
       
       {loading ? (
