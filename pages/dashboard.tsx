@@ -4,9 +4,44 @@ import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../lib/auth';
 import { Post } from '../lib/types';
 import PostCard from '../components/PostCard';
-import DashboardPostCard from '../components/DashboardPostCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+
+// We create a new, dedicated card for this view with all fixes
+const DashboardPostCard = ({ post, onClick }: { post: Post; onClick: () => void }) => {
+  const agreeCount = post.agree_count ?? 0;
+  const disagreeCount = post.disagree_count ?? 0;
+  const totalVotes = agreeCount + disagreeCount;
+  const sentiment = totalVotes === 0 ? 0.5 : agreeCount / totalVotes;
+  const hue = sentiment * 120; // 0 is red, 120 is green
+
+  return (
+    <motion.div
+      className="relative bg-slate-900/50 border border-slate-800 rounded-xl p-6 cursor-pointer group backdrop-blur-sm"
+      onClick={onClick}
+      initial={{ opacity: 0, y: 50 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ type: 'spring', stiffness: 100, damping: 20 }}
+    >
+      {/* Comet Tail Effect - Fixed */}
+      <div 
+        className="absolute top-1/2 right-full w-full h-24 blur-3xl -translate-y-1/2 opacity-0 group-hover:opacity-30 transition-opacity duration-500 -z-10"
+        style={{ background: `linear-gradient(to left, hsl(${hue}, 70%, 50%), transparent)` }}
+      />
+      <p className="text-white font-semibold text-lg mb-4 line-clamp-4">{post.content}</p>
+      <div className="flex justify-between items-end mt-auto">
+        <div className="text-xs text-slate-400">
+          <p>{totalVotes} votes</p>
+          <p>{new Date(post.created_at).toLocaleDateString()}</p>
+        </div>
+        <p className="text-lg font-bold" style={{ color: `hsl(${hue}, 70%, 60%)` }}>
+          {totalVotes > 0 ? `${Math.round(sentiment * 100)}%` : '--%'}
+        </p>
+      </div>
+    </motion.div>
+  );
+};
 
 const backdropVariants = { hidden: { opacity: 0 }, visible: { opacity: 1 } };
 const modalVariants = {
@@ -41,15 +76,18 @@ export default function DashboardPage() {
   return (
     <div className="relative">
       {/* Starfield Background */}
-      <div className="starfield stars1 -z-20"></div>
-      <div className="starfield stars2 -z-20"></div>
+      <div className="fixed top-0 left-0 w-full h-full -z-10">
+        <div className="starfield stars1"></div>
+        <div className="starfield stars2"></div>
+        <div className="starfield stars3"></div>
+      </div>
 
       <h2 className="text-3xl font-bold text-white mb-8">My Posts</h2>
       
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-           <div className="h-48 w-full bg-slate-800 rounded-xl animate-pulse"></div>
-           <div className="h-48 w-full bg-slate-800 rounded-xl animate-pulse"></div>
+           <div className="h-48 w-full bg-slate-800/70 rounded-xl animate-pulse"></div>
+           <div className="h-48 w-full bg-slate-800/70 rounded-xl animate-pulse"></div>
         </div>
       ) : posts.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -78,7 +116,8 @@ export default function DashboardPage() {
               onClick={(e) => e.stopPropagation()}
               variants={modalVariants}
             >
-              <PostCard post={selectedPost} isLink={false} />
+              {/* The PostCard in the modal is now a link again, for consistency */}
+              <PostCard post={selectedPost} isLink={true} />
             </motion.div>
           </motion.div>
         )}
