@@ -46,7 +46,7 @@ export default function DashboardPage() {
   // This effect runs our physics simulation to position the nodes
   useEffect(() => {
     if (posts.length > 0) {
-      const simulationNodes = posts.map(post => ({ id: post.id.toString(), ...post }));
+      const simulationNodes = posts.map(post => ({ ...post, id: post.id.toString() }));
 
       const simulation = forceSimulation(simulationNodes)
         .force('charge', forceManyBody().strength(-250)) // Nodes push each other away
