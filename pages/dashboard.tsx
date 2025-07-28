@@ -7,7 +7,7 @@ import PostCard from '../components/PostCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactFlow, { Background, Controls, Node } from 'reactflow';
 import MindMapNode from '../components/MindMapNode';
-import { forceSimulation, forceManyBody, forceCenter, SimulationNodeDatum } from 'd-force';
+import { forceSimulation, forceManyBody, forceCenter, SimulationNodeDatum } from 'd3-force';
 import Link from 'next/link';
 
 const nodeTypes = { mindMapNode: MindMapNode };
