@@ -5,12 +5,15 @@ import { useAuth } from '../lib/auth';
 import { Post } from '../lib/types';
 import PostCard from '../components/PostCard';
 import { motion, AnimatePresence } from 'framer-motion';
-import ReactFlow, { Background, Controls, Node, Position } from 'reactflow';
+import ReactFlow, { Background, Controls, Node } from 'reactflow';
 import MindMapNode from '../components/MindMapNode';
-import { forceSimulation, forceManyBody, forceCenter } from 'd3-force';
+import { forceSimulation, forceManyBody, forceCenter, SimulationNodeDatum } from 'd3-force';
 import Link from 'next/link';
 
 const nodeTypes = { mindMapNode: MindMapNode };
+
+// This new type tells TypeScript our Post object is compatible with the physics engine
+type SimulationPostNode = Post & SimulationNodeDatum & { id: string };
 
 const backdropVariants = { hidden: { opacity: 0 }, visible: { opacity: 1 } };
 const modalVariants = {
@@ -43,24 +46,23 @@ export default function DashboardPage() {
     if (user) getMyPosts();
   }, [user, authLoading, router]);
 
-  // This effect runs our physics simulation to position the nodes
   useEffect(() => {
     if (posts.length > 0) {
-      const simulationNodes = posts.map(post => ({ ...post, id: post.id.toString() }));
+      // We tell TypeScript what type our simulation nodes will be
+      const simulationNodes: SimulationPostNode[] = posts.map(post => ({ ...post, id: post.id.toString() }));
 
       const simulation = forceSimulation(simulationNodes)
-        .force('charge', forceManyBody().strength(-250)) // Nodes push each other away
-        .force('center', forceCenter(150, 150)) // They are drawn to the center
+        .force('charge', forceManyBody().strength(-250))
+        .force('center', forceCenter(150, 150))
         .stop();
 
-      // Run the simulation for a number of steps
       for (let i = 0; i < 200; ++i) simulation.tick();
 
-      const finalNodes = simulationNodes.map((post, index) => ({
-        id: post.id.toString(),
+      const finalNodes = simulationNodes.map((postNode) => ({
+        id: postNode.id,
         type: 'mindMapNode',
-        data: { post: post as Post, onClick: () => setSelectedPost(post as Post) },
-        position: { x: post.x || 0, y: post.y || 0 },
+        data: { post: postNode as Post, onClick: () => setSelectedPost(postNode as Post) },
+        position: { x: postNode.x || 0, y: postNode.y || 0 },
       }));
       setNodes(finalNodes);
     }
