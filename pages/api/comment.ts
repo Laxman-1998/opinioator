@@ -7,47 +7,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // 1. Manually get the auth token ("passport") from the request header.
-    const token = req.headers.authorization?.split(' ')[1];
-
-    if (!token) {
-      return res.status(401).json({ error: 'Unauthorized: No auth token provided.' });
-    }
-
-    // 2. Create a Supabase client instance.
+    // 1. Create a temporary client to validate the user's token ("passport")
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) throw new Error('No token provided');
     
-    // 3. Get the user by validating the token. This is the crucial step.
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    if (userError || !user) throw new Error('Invalid token');
 
-    if (userError || !user) {
-      return res.status(401).json({ error: userError?.message || 'Unauthorized: Invalid token.' });
-    }
+    // If we get here, the user is valid.
     
-    // If we get here, the user is successfully authenticated!
+    // 2. Now, create a powerful "admin" client using our new master key.
+    // This client can bypass RLS rules because we have already verified the user.
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    
     const { content, post_id } = req.body;
-
-    if (!content || !post_id) {
-      return res.status(400).json({ error: 'Missing content or post_id' });
-    }
-
-    // 4. Perform the insert into the database as the authenticated user.
-    const { error: insertError } = await supabase
+    
+    // 3. Insert the data using the admin client.
+    const { error: insertError } = await supabaseAdmin
       .from('comments')
       .insert([{ content, post_id, user_id: user.id }]);
 
-    if (insertError) {
-      console.error("Supabase insert error:", insertError);
-      return res.status(500).json({ error: insertError.message });
-    }
+    if (insertError) throw insertError;
 
     return res.status(200).json({ message: "Comment posted successfully." });
 
   } catch (error) {
-    console.error("Catch block error:", error);
-    res.status(500).json({ error: 'An unexpected server error occurred.' });
+    const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred.';
+    console.error("Error in /api/comment:", errorMessage);
+    res.status(500).json({ error: errorMessage });
   }
 }
