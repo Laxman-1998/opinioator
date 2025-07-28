@@ -8,11 +8,15 @@ body {
   background-color: #0B1120;
   color: #E0E6F1;
   font-family: 'Inter', sans-serif;
-  overflow-x: hidden; /* Prevent horizontal scrollbars */
+  overflow-x: hidden;
 }
 
-/* --- New Multi-Layered Starfield using Direct URLs --- */
-.starfield, .stars1, .stars2, .stars3 {
+/* --- Pure CSS Starfield --- */
+@keyframes move-stars {
+  from { transform: translateY(0px); }
+  to { transform: translateY(-2000px); }
+}
+.stars-bg {
   position: absolute;
   top: 0;
   left: 0;
@@ -21,25 +25,20 @@ body {
   width: 100%;
   height: 100%;
   display: block;
+  background: transparent;
 }
-
 .stars1 {
-  background: transparent url('https://www.script-tutorials.com/demos/360/images/stars.png') repeat top center;
-  z-index: -3;
-  animation: move-twink-back 200s linear infinite;
+  background-image: radial-gradient(1px 1px at 20px 30px, #fff, transparent), radial-gradient(1px 1px at 80px 80px, #fff, transparent);
+  background-size: 100px 100px;
+  animation: move-stars 120s linear infinite;
 }
 .stars2 {
-  background: transparent url('https://www.script-tutorials.com/demos/360/images/twinkling.png') repeat top center;
-  z-index: -2;
-  animation: move-twink-back 150s linear infinite;
+  background-image: radial-gradient(1px 1px at 40px 70px, #fff, transparent), radial-gradient(2px 2px at 160px 120px, #ccc, transparent);
+  background-size: 200px 200px;
+  animation: move-stars 80s linear infinite;
 }
 .stars3 {
-  background: transparent url('https://www.script-tutorials.com/demos/360/images/clouds.png') repeat top center;
-  z-index: -1;
-  animation: move-twink-back 100s linear infinite;
-}
-
-@keyframes move-twink-back {
-  from { background-position: 0 0; }
-  to { background-position: -10000px 5000px; }
+  background-image: radial-gradient(2px 2px at 10px 100px, #fff, transparent), radial-gradient(2px 2px at 40px 200px, #ccc, transparent);
+  background-size: 250px 250px;
+  animation: move-stars 60s linear infinite;
 }
