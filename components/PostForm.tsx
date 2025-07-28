@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import toast from 'react-hot-toast';
 import { useAuth } from '../lib/auth';
-import TemplatePicker from './TemplatePicker'; // Import our new component
+import TemplatePicker from './TemplatePicker';
 
 type PostFormProps = {
   onPostSuccess: () => void;
@@ -14,10 +14,9 @@ const PostForm = ({ onPostSuccess }: PostFormProps) => {
   const [labelDisagree, setLabelDisagree] = useState('Disagree');
   const [labelAgree, setLabelAgree] = useState('Agree');
   const [isLoading, setIsLoading] = useState(false);
-  const [isPickerOpen, setIsPickerOpen] = useState(false); // New state for the modal
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent) => {
-    // ... This function remains exactly the same
     event.preventDefault();
     if (!user) {
       toast.error("You must be logged in to post.");
@@ -56,12 +55,12 @@ const PostForm = ({ onPostSuccess }: PostFormProps) => {
             <input type="text" value={labelDisagree} onChange={(e) => setLabelDisagree(e.target.value)} className="w-full p-2 text-sm bg-slate-800/50 border border-slate-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:outline-none placeholder:text-slate-500 text-center" maxLength={30} />
             <input type="text" value={labelAgree} onChange={(e) => setLabelAgree(e.target.value)} className="w-full p-2 text-sm bg-slate-800/50 border border-slate-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none placeholder:text-slate-500 text-center" maxLength={30} />
           </div>
-           {/* New button to open the template picker */}
           <div className="flex justify-between items-center">
+             {/* This button's style has been updated */}
              <button 
                 type="button" 
                 onClick={() => setIsPickerOpen(true)}
-                className="text-xs text-slate-400 hover:text-white transition-colors"
+                className="text-xs text-slate-400 border border-slate-700 py-1 px-3 rounded-full hover:bg-slate-800 hover:text-white transition-colors"
              >
                 Choose a template...
              </button>
@@ -75,7 +74,6 @@ const PostForm = ({ onPostSuccess }: PostFormProps) => {
           </div>
         </div>
       </form>
-      {/* Render our new TemplatePicker modal */}
       <TemplatePicker 
         isOpen={isPickerOpen}
         onClose={() => setIsPickerOpen(false)}
