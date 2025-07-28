@@ -20,6 +20,22 @@ const SpaceBackground = () => {
             },
           },
           fpsLimit: 60,
+          interactivity: {
+            events: {
+              onHover: {
+                enable: true,
+                mode: "bubble",
+              },
+            },
+            modes: {
+              bubble: {
+                distance: 200,
+                duration: 2,
+                opacity: 0.8,
+                size: 2,
+              },
+            },
+          },
           particles: {
             color: {
               value: "#ffffff",
@@ -37,7 +53,7 @@ const SpaceBackground = () => {
             number: {
               density: {
                 enable: true,
-                value_area: 800,
+                area: 800, // This was the property that needed to be changed
               },
               value: 100,
             },
@@ -45,7 +61,7 @@ const SpaceBackground = () => {
               value: { min: 0.1, max: 0.5 },
               animation: {
                 enable: true,
-                speed: 0.5,
+                speed: 1,
                 minimumValue: 0.1,
               }
             },
