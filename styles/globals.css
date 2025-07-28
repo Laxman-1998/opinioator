@@ -5,22 +5,8 @@
 @tailwind utilities;
 
 body {
+  background-color: #0B1120; /* Deep navy blue */
   color: #E0E6F1;
   font-family: 'Inter', sans-serif;
-  /* New Animated Gradient Background */
-  background: linear-gradient(-45deg, #0B1120, #1F2937, #111827, #374151);
-  background-size: 400% 400%;
-  animation: gradient 25s ease infinite;
-}
-
-@keyframes gradient {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
+  overflow-x: hidden;
 }
