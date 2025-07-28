@@ -7,7 +7,6 @@ import PostCard from '../components/PostCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 
-// This is the small, clickable card for each item on our new timeline
 const TimelineCard = ({ post, onClick }: { post: Post; onClick: () => void }) => {
   const agreeCount = post.agree_count ?? 0;
   const disagreeCount = post.disagree_count ?? 0;
@@ -32,7 +31,6 @@ const TimelineCard = ({ post, onClick }: { post: Post; onClick: () => void }) =>
   );
 };
 
-// These are predefined animation variants for a more robust modal
 const backdropVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1 },
@@ -78,22 +76,25 @@ export default function DashboardPage() {
   }
   
   return (
-    <div>
-      <h2 className="text-3xl font-bold text-white mb-8">My Thought Timeline</h2>
-      
-      {posts.length > 0 ? (
-        <div className="flex gap-6 pb-6 overflow-x-auto">
-          {posts.map((post, i) => (
-            <TimelineCard key={post.id} post={post} onClick={() => setSelectedPost(post)} />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center p-12 border-2 border-dashed border-slate-800 rounded-lg">
-            <h3 className="text-xl font-bold text-white">You haven't posted any thoughts yet.</h3>
-        </div>
-      )}
+    // We use a React Fragment <> to return two top-level elements: the page and the modal
+    <>
+      <div>
+        <h2 className="text-3xl font-bold text-white mb-8">My Thought Timeline</h2>
+        
+        {posts.length > 0 ? (
+          <div className="flex gap-6 pb-6 overflow-x-auto">
+            {posts.map((post) => (
+              <TimelineCard key={post.id} post={post} onClick={() => setSelectedPost(post)} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center p-12 border-2 border-dashed border-slate-800 rounded-lg">
+              <h3 className="text-xl font-bold text-white">You haven't posted any thoughts yet.</h3>
+          </div>
+        )}
+      </div>
 
-      {/* NEW ROBUST MODAL IMPLEMENTATION */}
+      {/* The Modal is now OUTSIDE the main page div, solving the CSS conflict */}
       <AnimatePresence>
         {selectedPost && (
           <motion.div 
@@ -114,6 +115,6 @@ export default function DashboardPage() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </>
   );
 }
