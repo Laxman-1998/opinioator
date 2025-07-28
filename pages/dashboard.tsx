@@ -7,13 +7,13 @@ import PostCard from '../components/PostCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactFlow, { Background, Controls, Node } from 'reactflow';
 import MindMapNode from '../components/MindMapNode';
-import { forceSimulation, forceManyBody, forceCenter, SimulationNodeDatum } from 'd3-force';
+import { forceSimulation, forceManyBody, forceCenter, SimulationNodeDatum } from 'd-force';
 import Link from 'next/link';
 
 const nodeTypes = { mindMapNode: MindMapNode };
 
-// This new type tells TypeScript our Post object is compatible with the physics engine
-type SimulationPostNode = Post & SimulationNodeDatum & { id: string };
+// This is our new, corrected type for the simulation
+type SimulationPostNode = Omit<Post, 'id'> & { id: string } & SimulationNodeDatum;
 
 const backdropVariants = { hidden: { opacity: 0 }, visible: { opacity: 1 } };
 const modalVariants = {
@@ -48,7 +48,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (posts.length > 0) {
-      // We tell TypeScript what type our simulation nodes will be
+      // This line is now corrected to match our new type
       const simulationNodes: SimulationPostNode[] = posts.map(post => ({ ...post, id: post.id.toString() }));
 
       const simulation = forceSimulation(simulationNodes)
