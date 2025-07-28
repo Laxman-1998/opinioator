@@ -11,8 +11,6 @@
   "dependencies": {
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/supabase-js": "^2.52.0",
-    "@tsparticles/react": "^3.0.0",
-    "@tsparticles/slim": "^3.8.1",
     "d3-force": "^3.0.0",
     "framer-motion": "^12.23.6",
     "next": "^15.4.4",

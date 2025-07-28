@@ -6,7 +6,6 @@ import { Post } from '../lib/types';
 import PostCard from '../components/PostCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import SpaceBackground from '../components/SpaceBackground';
 
 const DashboardPostCard = ({ post, onClick, index }: { post: Post; onClick: () => void; index: number }) => {
   const agreeCount = post.agree_count ?? 0;
@@ -69,7 +68,6 @@ export default function DashboardPage() {
 
   return (
     <div className="relative">
-      <SpaceBackground />
       <h2 className="text-3xl font-bold text-white mb-8">My Posts</h2>
       
       {loading ? (
