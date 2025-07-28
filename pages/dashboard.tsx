@@ -12,8 +12,7 @@ import Link from 'next/link';
 
 const nodeTypes = { mindMapNode: MindMapNode };
 
-// This is our new, corrected type for the simulation
-type SimulationPostNode = Omit<Post, 'id'> & { id: string } & SimulationNodeDatum;
+type SimulationPostNode = Post & SimulationNodeDatum & { id: string };
 
 const backdropVariants = { hidden: { opacity: 0 }, visible: { opacity: 1 } };
 const modalVariants = {
@@ -48,23 +47,25 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (posts.length > 0) {
-      // This line is now corrected to match our new type
-      const simulationNodes: SimulationPostNode[] = posts.map(post => ({ ...post, id: post.id.toString() }));
+      const simulationNodes: Omit<SimulationPostNode, keyof SimulationNodeDatum>[] = posts.map(post => ({ ...post, id: post.id.toString() }));
 
-      const simulation = forceSimulation(simulationNodes)
+      const simulation = forceSimulation(simulationNodes as SimulationNodeDatum[])
         .force('charge', forceManyBody().strength(-250))
         .force('center', forceCenter(150, 150))
         .stop();
 
       for (let i = 0; i < 200; ++i) simulation.tick();
 
-      const finalNodes = simulationNodes.map((postNode) => ({
-        id: postNode.id,
-        type: 'mindMapNode',
-        data: { post: postNode as Post, onClick: () => setSelectedPost(postNode as Post) },
-        position: { x: postNode.x || 0, y: postNode.y || 0 },
-      }));
-      setNodes(finalNodes);
+      const finalNodes = simulationNodes.map((postNode) => {
+        const originalPost = posts.find(p => p.id.toString() === postNode.id);
+        return {
+          id: postNode.id,
+          type: 'mindMapNode',
+          data: { post: originalPost, onClick: () => setSelectedPost(originalPost!) },
+          position: { x: (postNode as any).x || 0, y: (postNode as any).y || 0 },
+        }
+      });
+      setNodes(finalNodes as Node[]);
     }
   }, [posts]);
 
