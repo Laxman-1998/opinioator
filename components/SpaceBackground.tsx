@@ -1,3 +1,4 @@
+
 import { useCallback } from "react";
 import Particles from "@tsparticles/react";
 import type { Engine } from "@tsparticles/engine";
@@ -22,7 +23,7 @@ const SpaceBackground = () => {
           fpsLimit: 120,
           particles: {
             number: {
-              value: 200, // Increased star count
+              value: 200, // More stars for a denser feel
             },
             color: {
               value: "#ffffff",
@@ -31,16 +32,16 @@ const SpaceBackground = () => {
               type: "circle",
             },
             opacity: {
-              value: {min: 0.1, max: 0.8}, // Some stars will be brighter
+              value: {min: 0.1, max: 0.8}, // Some stars will be brighter for depth
               animation: {
                 enable: true,
-                speed: 0.5,
+                speed: 0.8,
                 sync: false,
                 minimumValue: 0.1
               },
             },
             size: {
-              value: { min: 1, max: 2.5 }, // Varying sizes for depth
+              value: { min: 1, max: 2.5 }, // Varying sizes for a parallax effect
             },
             move: {
               enable: true,
