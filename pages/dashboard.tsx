@@ -8,9 +8,8 @@ import { Post } from '../lib/types';
 import PostCard from '../components/PostCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import SpaceBackground from '../components/SpaceBackground';
 
-// Updated card with a faster, snappier hover transition
+// We create a dedicated, polished card for this view
 const DashboardPostCard = ({ post, onClick, index }: { post: Post; onClick: () => void; index: number }) => {
   const agreeCount = post.agree_count ?? 0;
   const disagreeCount = post.disagree_count ?? 0;
@@ -72,7 +71,15 @@ export default function DashboardPage() {
 
   return (
     <div className="relative">
-      <SpaceBackground />
+      {/* New Starfield Background */}
+      <div className="fixed top-0 left-0 w-full h-full -z-10">
+        <div className="stars-container">
+          <div className="stars1"></div>
+          <div className="stars2"></div>
+          <div className="stars3"></div>
+        </div>
+      </div>
+
       <h2 className="text-3xl font-bold text-white mb-8">My Posts</h2>
       
       {loading ? (
