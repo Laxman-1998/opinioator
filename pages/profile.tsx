@@ -20,6 +20,7 @@ export default function ProfilePage() {
     }
   }, [user]);
 
+  // This protects the page from logged-out users
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/login');
@@ -29,15 +30,22 @@ export default function ProfilePage() {
   const handleUpdateProfile = async (event: React.FormEvent) => {
     event.preventDefault();
     setLoading(true);
+    toast.loading('Saving...');
 
-    const { error } = await supabase.auth.updateUser({
+    const { data, error } = await supabase.auth.updateUser({
       data: { country, city } // We save the data to the 'data' property
     });
 
+    toast.dismiss();
     if (error) {
       toast.error(error.message);
     } else {
       toast.success('Profile updated successfully!');
+      // Update the local state to match the newly saved data
+      if (data.user) {
+        setCountry(data.user.user_metadata.country || '');
+        setCity(data.user.user_metadata.city || '');
+      }
     }
     setLoading(false);
   };
