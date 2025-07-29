@@ -19,13 +19,13 @@ const SpaceBackground = () => {
               value: "#0B1120",
             },
           },
-          fpsLimit: 60,
+          fpsLimit: 120,
           particles: {
             number: {
-              value: 150,
+              value: 160,
               density: {
                 enable: true,
-                value_area: 800,
+                area: 800,
               },
             },
             color: {
@@ -36,11 +36,6 @@ const SpaceBackground = () => {
             },
             opacity: {
               value: {min: 0.1, max: 0.5},
-              animation: {
-                enable: true,
-                speed: 0.5,
-                sync: false,
-              },
             },
             size: {
               value: { min: 1, max: 2 },
@@ -48,8 +43,9 @@ const SpaceBackground = () => {
             move: {
               enable: true,
               speed: 0.2,
-              direction: "top",
-              straight: true,
+              direction: "none",
+              random: true,
+              straight: false,
               outModes: {
                 default: "out",
               },
