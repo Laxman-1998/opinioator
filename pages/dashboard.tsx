@@ -4,9 +4,39 @@ import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../lib/auth';
 import { Post } from '../lib/types';
 import PostCard from '../components/PostCard';
-import DashboardPostCard from '../components/DashboardPostCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import SpaceBackground from '../components/SpaceBackground';
+
+const DashboardPostCard = ({ post, onClick, index }: { post: Post; onClick: () => void; index: number }) => {
+  const agreeCount = post.agree_count ?? 0;
+  const disagreeCount = post.disagree_count ?? 0;
+  const totalVotes = agreeCount + disagreeCount;
+  const sentiment = totalVotes === 0 ? 0.5 : agreeCount / totalVotes;
+
+  return (
+    // The hover effect is now a clean, fast, glowing border
+    <motion.div
+      className="relative bg-slate-900/50 border border-slate-800 rounded-xl p-6 cursor-pointer group backdrop-blur-sm transition-colors duration-200"
+      onClick={onClick}
+      initial={{ opacity: 0, y: 50 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: 'spring', stiffness: 100, damping: 20, delay: index * 0.1 }}
+      whileHover={{ scale: 1.03, borderColor: '#3b82f6', boxShadow: '0 0 20px rgba(59, 130, 246, 0.3)' }}
+    >
+      <p className="text-white font-semibold text-lg mb-4 line-clamp-4">{post.content}</p>
+      <div className="flex justify-between items-end mt-auto">
+        <div className="text-xs text-slate-400">
+          <p>{totalVotes} votes</p>
+          <p>{new Date(post.created_at).toLocaleDateString()}</p>
+        </div>
+        <p className="text-lg font-bold" style={{ color: `hsl(${sentiment * 120}, 70%, 60%)` }}>
+          {totalVotes > 0 ? `${Math.round(sentiment * 100)}%` : '--%'}
+        </p>
+      </div>
+    </motion.div>
+  );
+};
 
 const backdropVariants = { hidden: { opacity: 0 }, visible: { opacity: 1 } };
 const modalVariants = {
@@ -40,15 +70,7 @@ export default function DashboardPage() {
 
   return (
     <div className="relative">
-      {/* Starfield Background */}
-      <div className="fixed top-0 left-0 w-full h-full -z-10">
-        <div className="stars-container">
-          <div className="stars1"></div>
-          <div className="stars2"></div>
-          <div className="stars3"></div>
-        </div>
-      </div>
-
+      <SpaceBackground />
       <h2 className="text-3xl font-bold text-white mb-8">My Posts</h2>
       
       {loading ? (
