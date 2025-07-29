@@ -25,7 +25,7 @@ const SpaceBackground = () => {
               value: 200,
               density: {
                 enable: true,
-                area: 800,
+                value_area: 800,
               },
             },
             color: {
