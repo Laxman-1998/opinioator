@@ -1,4 +1,3 @@
-
 /* In `pages/dashboard.tsx`, replace everything with this: */
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
