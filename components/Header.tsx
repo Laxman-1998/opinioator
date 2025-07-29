@@ -2,14 +2,24 @@ import Link from 'next/link';
 import { useAuth } from '../lib/auth';
 import { supabase } from '../lib/supabaseClient';
 import { useRouter } from 'next/router';
+import toast from 'react-hot-toast';
 
 const Header = () => {
   const { user } = useAuth();
   const router = useRouter();
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push('/');
+    try {
+      toast.loading('Logging out...');
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      router.push('/');
+      toast.dismiss();
+    } catch (error) {
+      toast.dismiss();
+      toast.error('Failed to log out. Please try again.');
+      console.error('Error logging out:', error);
+    }
   };
 
   return (
@@ -20,12 +30,17 @@ const Header = () => {
             Opinioator
           </h1>
         </Link>
-        <nav className="flex items-center gap-4">
+        <nav className="flex items-center gap-6">
           {user ? (
             <>
               <Link href="/dashboard">
-                <span className="text-sm font-bold text-slate-300 hover:text-white transition-colors cursor-pointer">
+                <span className="text-sm font-medium text-slate-300 hover:text-white transition-colors cursor-pointer">
                   My Dashboard
+                </span>
+              </Link>
+              <Link href="/profile">
+                <span className="text-sm font-medium text-slate-300 hover:text-white transition-colors cursor-pointer">
+                  My Profile
                 </span>
               </Link>
               <button 
