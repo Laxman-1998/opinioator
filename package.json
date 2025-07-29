@@ -11,18 +11,17 @@
   "dependencies": {
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/supabase-js": "^2.52.0",
-    "d3-force": "^3.0.0",
+    "@tsparticles/react": "^3.0.0",
+    "@tsparticles/slim": "^3.8.1",
     "framer-motion": "^12.23.6",
     "next": "^15.4.4",
     "rc-slider": "^11.1.8",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-globe.gl": "^2.34.0",
-    "react-hot-toast": "^2.5.2",
-    "reactflow": "^11.11.4"
+    "react-hot-toast": "^2.5.2"
   },
   "devDependencies": {
-    "@types/d3-force": "^3.0.10",
     "@types/node": "18.0.1",
     "@types/react": "18.0.14",
     "@types/react-dom": "18.0.5",
