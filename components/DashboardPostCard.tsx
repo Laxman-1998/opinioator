@@ -9,7 +9,7 @@ const DashboardPostCard = ({ post, onClick, index }: { post: Post; onClick: () =
 
   return (
     <motion.div
-      className="relative bg-slate-900/50 border border-slate-800 rounded-xl p-6 cursor-pointer group backdrop-blur-sm transition-all duration-200"
+      className="relative bg-slate-900/50 border border-slate-800 rounded-xl p-6 cursor-pointer group backdrop-blur-sm transition-colors duration-200"
       onClick={onClick}
       initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
