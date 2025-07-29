@@ -22,9 +22,11 @@ const SpaceBackground = () => {
           fpsLimit: 60,
           particles: {
             number: {
-              // We are removing the problematic 'density' object
-              // and using a simple, fixed value instead.
               value: 150,
+              density: {
+                enable: true,
+                value_area: 800,
+              },
             },
             color: {
               value: "#ffffff",
@@ -33,16 +35,15 @@ const SpaceBackground = () => {
               type: "circle",
             },
             opacity: {
-              value: { min: 0.1, max: 0.6 },
+              value: {min: 0.1, max: 0.5},
               animation: {
                 enable: true,
                 speed: 0.5,
                 sync: false,
-                minimumValue: 0.1,
               },
             },
             size: {
-              value: { min: 1, max: 3 },
+              value: { min: 1, max: 2 },
             },
             move: {
               enable: true,
