@@ -54,6 +54,12 @@ const PostCard = ({ post, isLink = true }: PostCardProps) => {
   const CardContent = (
     // We've added a ternary operator for the outer div's classes
     <div className={`bg-slate-900/50 p-5 rounded-lg border border-slate-800 transition-colors ${isLink ? 'cursor-pointer hover:border-blue-500' : ''}`}>
+      {currentPost.anonymous_name && (
+  <p className="text-slate-400 text-sm italic mb-2">
+    ✨ {currentPost.anonymous_name}
+  </p>
+)}
+
       <p className="text-slate-200 text-lg">{currentPost.content}</p>
       
       <div className="mt-6 pt-4 border-t border-slate-800">

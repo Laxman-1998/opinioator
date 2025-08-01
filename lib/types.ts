@@ -7,6 +7,7 @@ export type Post = {
   label_agree: string | null;
   label_disagree: string | null;
   user_id: string | null;
+  anonymous_name: string;
 };
 
 export type Comment = {
