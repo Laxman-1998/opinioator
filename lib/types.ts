@@ -1,13 +1,13 @@
 export type Post = {
   id: number;
-  created_at: string;
   content: string;
+  user_id: string | null;
+  created_at: string;
   agree_count: number | null;
   disagree_count: number | null;
   label_agree: string | null;
   label_disagree: string | null;
-  user_id: string | null;
-  anonymous_name: string;
+  anonymous_name: string; // ✅ NEW FIELD
 };
 
 export type Comment = {

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import toast from 'react-hot-toast';
 import { useAuth } from '../lib/auth';
+import generateAnonymousName from '../lib/generateAnonymousName';
 
 type PostFormProps = {
   onPostSuccess: () => void;
@@ -22,26 +23,25 @@ const PostForm = ({ onPostSuccess }: PostFormProps) => {
     }
     if (content.trim().length === 0) return;
     setIsLoading(true);
-    
+
+    const anonymousName = generateAnonymousName();
+
     try {
-      // Create the new post object
       const newPost = {
         content: content,
         user_id: user.id,
         label_agree: labelAgree,
         label_disagree: labelDisagree,
-        // Check for country in user_metadata and add it if it exists
+        anonymous_name: anonymousName,
         country: user.user_metadata.country || null
       };
 
       const { error } = await supabase.from('posts').insert([newPost]);
-        
       if (error) throw error;
 
       toast.success('Your thought is now live!');
       setContent('');
       onPostSuccess();
-      
     } catch (error) {
       toast.error('Sorry, something went wrong.');
       console.error('Error posting opinion:', error);
@@ -65,13 +65,13 @@ const PostForm = ({ onPostSuccess }: PostFormProps) => {
           <input type="text" value={labelAgree} onChange={(e) => setLabelAgree(e.target.value)} className="w-full p-2 text-sm bg-slate-800/50 border border-slate-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none placeholder:text-slate-500 text-center" maxLength={30} />
         </div>
         <div className="flex justify-between items-center">
-           <button 
-              type="button" 
-              onClick={() => { /* Logic for template picker can go here */ }}
-              className="text-xs text-slate-400 border border-slate-700 py-1 px-3 rounded-full hover:bg-slate-800 hover:text-white transition-colors"
-           >
-              Choose a template...
-           </button>
+          <button 
+            type="button" 
+            onClick={() => { /* Logic for template picker can go here */ }}
+            className="text-xs text-slate-400 border border-slate-700 py-1 px-3 rounded-full hover:bg-slate-800 hover:text-white transition-colors"
+          >
+            Choose a template...
+          </button>
           <button
             type="submit"
             className="bg-blue-600 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-slate-600 disabled:cursor-not-allowed self-end"

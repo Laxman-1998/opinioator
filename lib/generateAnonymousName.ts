@@ -1,18 +1,12 @@
-export function generateAnonymousName(): string {
-  const options = [
-    { animal: "Fox", emoji: "🦊" },
-    { animal: "Owl", emoji: "🦉" },
-    { animal: "Panda", emoji: "🐼" },
-    { animal: "Dolphin", emoji: "🐬" },
-    { animal: "Turtle", emoji: "🐢" },
-    { animal: "Elephant", emoji: "🐘" },
-    { animal: "Butterfly", emoji: "🦋" },
-    { animal: "Rabbit", emoji: "🐇" },
-    { animal: "Koala", emoji: "🐨" },
-    { animal: "Falcon", emoji: "🦅" },
-    { animal: "Penguin", emoji: "🐧" },
-    { animal: "Otter", emoji: "🦦" },
-    { animal: "Bear", emoji: "🐻" }
+// lib/generateAnonymousName.ts
+export default function generateAnonymousName() {
+  const emotions = [
+    "Hopeful", "Curious", "Thoughtful", "Anxious", "Grateful", "Gentle",
+    "Lonely", "Brave", "Wistful", "Calm", "Resilient", "Inspired", "Quiet"
+  ];
+  const animals = [
+    "🦊 Fox", "🦉 Owl", "🐼 Panda", "🐬 Dolphin", "🐢 Turtle", "🐘 Elephant", 
+    "🦋 Butterfly", "🐰 Rabbit", "🐨 Koala", "🦅 Falcon", "🐧 Penguin", "🦦 Otter", "🐻 Bear"
   ];
 
   const emotions = [
