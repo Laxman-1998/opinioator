@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { supabase } from "@/lib/supabaseClient";
-import { generateAnonymousName } from "@/lib/generateAnonymousName";
+import { supabase } from "../../lib/supabaseClient";
+import { generateAnonymousName } from "../../lib/generateAnonymousName";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "POST") {
