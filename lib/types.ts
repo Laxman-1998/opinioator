@@ -2,7 +2,7 @@ export type Post = {
   id: number;
   content: string;
   created_at: string;
-  anonymous_name: string; // Now required
+  anonymous_name: string; // The field is now correctly required
   agree_count: number | null;
   disagree_count: number | null;
   label_agree: string | null;
