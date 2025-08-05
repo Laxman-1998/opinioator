@@ -1,0 +1,38 @@
+import { useRouter } from 'next/router';
+import PostForm from '../components/PostForm';
+import { useAuth } from '../lib/auth';
+import { useEffect } from 'react';
+
+const CreatePostPage = () => {
+  const router = useRouter();
+  const { user, loading } = useAuth();
+
+  // Redirect user if they are not logged in
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  // This function is passed to the form.
+  // After a successful post, it redirects the user back to the feed.
+  const handlePostSuccess = () => {
+    router.push('/feed');
+  };
+
+  if (loading || !user) {
+    return <p className="text-center">Loading...</p>;
+  }
+
+  return (
+    <div className="w-full max-w-2xl mx-auto flex flex-col gap-8">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold">Share Your Thought</h1>
+        <p className="text-slate-400 mt-2">Your identity will remain anonymous.</p>
+      </div>
+      <PostForm onPostSuccess={handlePostSuccess} />
+    </div>
+  );
+};
+
+export default CreatePostPage;
