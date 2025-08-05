@@ -1,50 +1,51 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { supabase } from './supabaseClient';
-import type { User } from '@supabase/supabase-js';
+import { User } from '@supabase/supabase-js';
 
-// Create a context for authentication
-const AuthContext = createContext<{ user: User | null; loading: boolean }>({
-  user: null,
-  loading: true,
-});
+type AuthContextType = {
+  user: User | null;
+  loading: boolean;
+  signOut: () => Promise<void>;
+};
 
-// Create a provider component
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider = (props: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+  };
+
   useEffect(() => {
-    // Get the initial user session
-    const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setLoading(false);
-    };
-    getSession();
+    });
 
-    // Listen for changes in authentication state (login, logout)
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
         setUser(session?.user ?? null);
         setLoading(false);
       }
     );
 
-    // Cleanup the listener when the component unmounts
     return () => {
-      authListener.subscription.unsubscribe();
+      subscription?.unsubscribe();
     };
   }, []);
 
-  const value = {
-    user,
-    loading,
-  };
+  const value = { user, loading, signOut: handleSignOut };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={value} {...props} />;
 };
 
-// Create a custom hook to use the auth context
 export const useAuth = () => {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };
