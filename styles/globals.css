@@ -63,3 +63,21 @@ $shadows-big: multiple-box-shadow(100);
   from { transform: translateY(0px); }
   to { transform: translateY(-2000px); }
 }
+
+/* --- Globe Background Image --- */
+body::before {
+  content: '';
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  width: 1000px;
+  height: 1000px;
+  background-image: url('/globe.png');
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  background-size: contain;
+  transform: translateX(-50%);
+  opacity: 0.15;
+  z-index: -1;
+  pointer-events: none;
+}

@@ -81,7 +81,7 @@ const PostForm = ({ onPostSuccess }: PostFormProps) => {
       <button
         type="submit"
         disabled={isSubmitting || content.trim().length === 0}
-        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-4 px-6 rounded-lg text-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 transform hover:scale-105 disabled:from-slate-700 disabled:to-slate-800 disabled:cursor-not-allowed disabled:scale-100"
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-5 rounded-lg text-base transition-colors duration-200 disabled:bg-slate-700 disabled:cursor-not-allowed"
       >
         {isSubmitting ? 'Sharing...' : 'Share Anonymously'}
       </button>
