@@ -12,11 +12,22 @@ const HomePage = () => {
 
   const handlePostSuccess = () => {
     closeModal();
-    router.push('/feed'); // After success, go to the feed to see the new post
+    router.push('/feed');
   };
 
   return (
     <>
+      {/* 👇 THE GLOBE/STARFIELD BACKGROUND IS RESTORED HERE */}
+      <div className="fixed top-0 left-0 w-full h-full -z-10">
+        <div className="stars-container">
+          <div className="stars1"></div>
+          <div className="stars2"></div>
+          <div className="stars3"></div>
+        </div>
+        {/* You may have a specific globe component or image here as well.
+            This restores the starfield effect from your globals.css */}
+      </div>
+
       <div className="w-full text-center flex flex-col items-center justify-center min-h-[70vh]">
         <h1 className="text-5xl md:text-6xl font-bold">What does the world think?</h1>
         <p className="text-slate-400 mt-4 max-w-xl">Share a thought. Get honest validation. Stay anonymous.</p>
