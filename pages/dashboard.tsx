@@ -1,14 +1,12 @@
-/* In `pages/dashboard.tsx`, replace everything with this: */
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../lib/auth';
 import { Post } from '../lib/types';
 import PostCard from '../components/PostCard';
 import { motion, AnimatePresence } from 'framer-motion';
-import Link from 'next/link';
+import { fetchUserPosts } from '../lib/posts'; // 👈 1. Import the corrected function
 
-// We create a dedicated, polished card for this view
+// This is your beautiful, polished card component. It remains unchanged.
 const DashboardPostCard = ({ post, onClick, index }: { post: Post; onClick: () => void; index: number }) => {
   const agreeCount = post.agree_count ?? 0;
   const disagreeCount = post.disagree_count ?? 0;
@@ -60,7 +58,8 @@ export default function DashboardPage() {
     const getMyPosts = async () => {
       if (user) {
         setLoading(true);
-        const { data } = await supabase.from('posts').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+        // 👇 2. THE FIX IS HERE: We call our new, safe function instead of supabase directly
+        const data = await fetchUserPosts(user.id);
         if (data) setPosts(data);
         setLoading(false);
       }
@@ -70,7 +69,7 @@ export default function DashboardPage() {
 
   return (
     <div className="relative">
-      {/* New Starfield Background */}
+      {/* Your starfield background remains unchanged */}
       <div className="fixed top-0 left-0 w-full h-full -z-10">
         <div className="stars-container">
           <div className="stars1"></div>
@@ -83,8 +82,8 @@ export default function DashboardPage() {
       
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-           <div className="h-48 w-full bg-slate-800/70 rounded-xl animate-pulse"></div>
-           <div className="h-48 w-full bg-slate-800/70 rounded-xl animate-pulse"></div>
+            <div className="h-48 w-full bg-slate-800/70 rounded-xl animate-pulse"></div>
+            <div className="h-48 w-full bg-slate-800/70 rounded-xl animate-pulse"></div>
         </div>
       ) : posts.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -98,6 +97,7 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* Your modal logic remains unchanged */}
       <AnimatePresence>
         {selectedPost && (
           <motion.div 
