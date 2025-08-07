@@ -4,9 +4,7 @@ import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 import { useAuth } from '../lib/auth';
 import PostForm from '../components/PostForm';
-import ThoughtLaunchAnimation from '../components/ThoughtLaunchAnimation';
-import { useModal } from '../context/ModalContext';
-import { motion, AnimatePresence } from 'framer-motion';
+import ThoughtLaunchAnimation from '../components/ThoughtLaunchAnimation'; // 👈 1. We need to import the animation
 
 const Globe = dynamic(() => import('react-globe.gl'), { 
   ssr: false,
@@ -16,11 +14,13 @@ const Globe = dynamic(() => import('react-globe.gl'), {
 export default function HomePage() {
   const { user } = useAuth();
   const router = useRouter();
-  const { isModalOpen, openModal, closeModal } = useModal();
+  const [isPosting, setIsPosting] = useState(false);
   const [points, setPoints] = useState<{ lat: number; lng: number; size: number; color: string }[]>([]);
+  // 👇 2. We add the state to control the animation
   const [animationState, setAnimationState] = useState<'idle' | 'launching' | 'spreading'>('idle');
 
   useEffect(() => {
+    // This is your excellent globe points logic, it remains unchanged.
     const generatePoints = () => {
       const newPoints = Array.from({ length: 10 }).map(() => ({
         lat: (Math.random() - 0.5) * 180,
@@ -35,22 +35,32 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, []);
 
-  // 👇 THE FIX IS HERE: This function now triggers the animation
-  const handlePostSuccess = useCallback(() => {
-    closeModal();
-    setAnimationState('launching');
+  const handleShareClick = () => {
+    if (user) {
+      setIsPosting(true);
+    } else {
+      router.push('/signup');
+    }
+  };
 
+  // 👇 3. This is the corrected success handler. It now triggers the animation.
+  const handlePostSuccess = useCallback(() => {
+    setIsPosting(false); // Close the form
+    setAnimationState('launching'); // Start the animation
+
+    // After the animation plays, we redirect to the feed
     setTimeout(() => {
       setAnimationState('idle');
-      router.push('/feed'); // Redirect after animation
-    }, 2500);
-  }, [closeModal, router]);
+      router.push('/feed');
+    }, 2500); // 2.5 second duration
+  }, [router]);
 
   return (
-    <>
+    <div className="relative w-screen h-[calc(100vh-81px)] -ml-[calc(50vw-50%)] overflow-hidden">
+      {/* 👇 4. We render the animation component here */}
       <ThoughtLaunchAnimation animationState={animationState} />
 
-      <div className="absolute top-0 left-0 w-full h-full -z-10">
+      <div className="absolute top-0 left-0 w-full h-full">
         <Globe
           globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
           backgroundColor="rgba(0,0,0,0)"
@@ -61,42 +71,33 @@ export default function HomePage() {
       </div>
 
       <div className="absolute top-0 left-0 w-full h-full flex flex-col justify-center items-center text-center p-4">
-        <h1 className="text-5xl font-bold text-white mb-4 animate-fade-in-down">
-          What does the world think?
-        </h1>
-        <p className="text-xl text-slate-400 mb-8 animate-fade-in-up">
-          Share a thought. Get honest validation. Stay anonymous.
-        </p>
-        <button
-          onClick={openModal}
-          className="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg text-lg hover:bg-blue-700 transition-colors animate-pulse-slow"
-        >
-          Share a Thought
-        </button>
-        <Link href="/feed">
-          <span className="absolute bottom-10 text-slate-400 hover:text-white transition-colors cursor-pointer animate-fade-in">
-            (or, Explore the Feed)
-          </span>
-        </Link>
-      </div>
-      
-      <AnimatePresence>
-        {isModalOpen && (
-          <motion.div
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={closeModal}
-          >
-            <motion.div
-              className="w-full max-w-2xl"
-              initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
+        {isPosting ? (
+          <div className="w-full max-w-2xl bg-slate-900/50 backdrop-blur-md p-8 rounded-lg animate-fade-in">
+            {/* 👇 5. We pass the new, correct function to the form */}
+            <PostForm onPostSuccess={handlePostSuccess} /> 
+          </div>
+        ) : (
+          <>
+            <h1 className="text-5xl font-bold text-white mb-4 animate-fade-in-down">
+              What does the world think?
+            </h1>
+            <p className="text-xl text-slate-400 mb-8 animate-fade-in-up">
+              Share a thought. Get honest validation. Stay anonymous.
+            </p>
+            <button
+              onClick={handleShareClick}
+              className="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg text-lg hover:bg-blue-700 transition-colors animate-pulse-slow"
             >
-              <PostForm onPostSuccess={handlePostSuccess} /> 
-            </motion.div>
-          </motion.div>
+              Share a Thought
+            </button>
+            <Link href="/feed">
+              <span className="absolute bottom-10 text-slate-400 hover:text-white transition-colors cursor-pointer animate-fade-in">
+                (or, Explore the Feed)
+              </span>
+            </Link>
+          </>
         )}
-      </AnimatePresence>
-    </>
+      </div>
+    </div>
   );
 }

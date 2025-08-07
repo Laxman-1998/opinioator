@@ -6,14 +6,14 @@ import PostList from '../components/PostList';
 import PostForm from '../components/PostForm';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useModal } from '../context/ModalContext';
 import ThoughtLaunchAnimation from '../components/ThoughtLaunchAnimation';
 
 const FeedPage = () => {
   const { user, loading: authLoading } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const { isModalOpen, openModal, closeModal } = useModal();
+  // 👇 This page now uses its own state for the form, just like index.tsx
+  const [isPosting, setIsPosting] = useState(false);
   const [animationState, setAnimationState] = useState<'idle' | 'launching' | 'spreading'>('idle');
 
   const loadPosts = useCallback(async () => {
@@ -26,15 +26,16 @@ const FeedPage = () => {
     loadPosts().then(() => setLoading(false));
   }, [loadPosts]);
 
+  // This is the updated success handler for the form
   const handlePostSuccess = useCallback(() => {
-    closeModal();
-    setAnimationState('launching');
+    setIsPosting(false); // Close the form
+    setAnimationState('launching'); // Start the animation
 
     setTimeout(() => {
       setAnimationState('idle');
-      loadPosts();
+      loadPosts(); // Reload the posts
     }, 2500); // Duration for the animation to play out
-  }, [closeModal, loadPosts]);
+  }, [loadPosts]);
 
   if (authLoading) {
     return <p className="text-center">Authenticating...</p>;
@@ -51,7 +52,8 @@ const FeedPage = () => {
         </div>
 
         {user && (
-          <button onClick={openModal} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-center cursor-pointer transition-colors duration-200 self-center">
+          // This button now controls the local `isPosting` state
+          <button onClick={() => setIsPosting(true)} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-center cursor-pointer transition-colors duration-200 self-center">
             Share a Thought
           </button>
         )}
@@ -60,11 +62,11 @@ const FeedPage = () => {
       </div>
 
       <AnimatePresence>
-        {isModalOpen && (
+        {isPosting && (
           <motion.div
             className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={closeModal}
+            onClick={() => setIsPosting(false)}
           >
             <motion.div
               className="w-full max-w-2xl"
