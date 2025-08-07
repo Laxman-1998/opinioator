@@ -28,4 +28,4 @@ export const fetchUserPosts = async (userId: string): Promise<Post[]> => {
 
   if (error) { console.error(`Error fetching posts for user ${userId}:`, error); return []; }
   return data || [];
-};
+}

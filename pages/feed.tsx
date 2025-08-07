@@ -44,4 +44,4 @@ const FeedPage = () => {
   );
 };
 
-export default FeedPage;
+export default FeedPage
