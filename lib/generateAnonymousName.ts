@@ -15,7 +15,8 @@ export function generateAnonymousName(): string {
   const randomEmotion = emotions[Math.floor(Math.random() * emotions.length)];
   const randomAnimalName = animalKeys[Math.floor(Math.random() * animalKeys.length)];
   const animalEmoji = animals[randomAnimalName];
-  const randomNumber = Math.floor(Math.random() * 900) + 100; // 3-digit number
+  const randomNumber = Math.floor(Math.random() * 900) + 100;
 
+  // This is the single source of truth for the format
   return `✨ ${randomEmotion}${randomAnimalName}${randomNumber} ${animalEmoji}`;
 }

@@ -9,14 +9,12 @@ type PostCardProps = {
 };
 
 const PostCard = ({ post, isLink = true }: PostCardProps) => {
-  // We now manage vote counts separately, not a whole copy of the post
   const [agreeCount, setAgreeCount] = useState(post.agree_count ?? 0);
   const [disagreeCount, setDisagreeCount] = useState(post.disagree_count ?? 0);
   const [userVote, setUserVote] = useState<string | null>(null);
   const [sliderValue, setSliderValue] = useState(50);
 
   useEffect(() => {
-    // Reset local state if the underlying post prop changes
     setAgreeCount(post.agree_count ?? 0);
     setDisagreeCount(post.disagree_count ?? 0);
     setUserVote(localStorage.getItem(`voted_on_post_${post.id}`));
@@ -26,13 +24,11 @@ const PostCard = ({ post, isLink = true }: PostCardProps) => {
     if (userVote) return;
     localStorage.setItem(`voted_on_post_${post.id}`, voteType);
     setUserVote(voteType);
-
     if (voteType === 'agree') {
       setAgreeCount(c => c + 1);
     } else {
       setDisagreeCount(c => c + 1);
     }
-
     await fetch('/api/vote', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -51,10 +47,10 @@ const PostCard = ({ post, isLink = true }: PostCardProps) => {
 
   const CardContent = (
     <div className={`bg-slate-900/50 p-5 rounded-lg border border-slate-800 transition-colors ${isLink ? 'cursor-pointer hover:border-blue-500' : ''}`}>
-      {/* This now correctly reads from the post prop */ }
       {post.anonymous_name && (
         <p className="text-slate-400 text-sm italic mb-2">
-          ✨ {post.anonymous_name}
+          {/* 👇 THE FIX IS HERE: We remove the extra star from this line */}
+          {post.anonymous_name}
         </p>
       )}
 
