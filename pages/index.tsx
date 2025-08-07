@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react'; // 1. useRef is added
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 import { useAuth } from '../lib/auth';
 import PostForm from '../components/PostForm';
-import ThoughtLaunchAnimation from '../components/ThoughtLaunchAnimation'; // 👈 1. We need this import
+import { GlobeMethods } from 'react-globe.gl'; // 2. A type for the globe is added
 
 const Globe = dynamic(() => import('react-globe.gl'), { 
   ssr: false,
@@ -16,8 +16,7 @@ export default function HomePage() {
   const router = useRouter();
   const [isPosting, setIsPosting] = useState(false);
   const [points, setPoints] = useState<{ lat: number; lng: number; size: number; color: string }[]>([]);
-  // 👇 2. We add the state to control the animation
-  const [animationState, setAnimationState] = useState<'idle' | 'launching' | 'spreading'>('idle');
+  const globeEl = useRef<GlobeMethods | undefined>(); // 3. A ref to control the globe is added
 
   useEffect(() => {
     // Your globe points logic is preserved
@@ -43,25 +42,37 @@ export default function HomePage() {
     }
   };
 
-  // 👇 3. This is the corrected success handler. It now closes the form and triggers the animation.
+  // 4. This success handler is now more advanced to control the camera
   const handlePostSuccess = useCallback(() => {
-    setIsPosting(false); // Close the form
-    setAnimationState('launching'); // Start the animation
+    setIsPosting(false);
 
-    // After the animation plays, we redirect to the feed
+    const lat = (Math.random() - 0.5) * 180;
+    const lng = (Math.random() - 0.5) * 360;
+
+    if (globeEl.current) {
+      // Go to the spot, zoomed in
+      globeEl.current.pointOfView({ lat, lng, altitude: 0.1 }, 0);
+
+      // Start the smooth zoom out
+      setTimeout(() => {
+        globeEl.current?.pointOfView({ lat, lng, altitude: 2.5 }, 3000);
+      }, 500);
+    }
+
+    // Redirect after the full sequence
     setTimeout(() => {
-      setAnimationState('idle');
       router.push('/feed');
-    }, 2500); // 2.5 second duration
+    }, 4000);
   }, [router]);
 
   return (
     <div className="relative w-screen h-[calc(100vh-81px)] -ml-[calc(50vw-50%)] overflow-hidden">
-      {/* 👇 4. We render the animation component here */}
-      <ThoughtLaunchAnimation animationState={animationState} />
+      {/* We don't need the old animation component for now */}
+      {/* <ThoughtLaunchAnimation animationState={animationState} /> */}
 
       <div className="absolute top-0 left-0 w-full h-full">
         <Globe
+          ref={globeEl} // 5. The ref is assigned here
           globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
           backgroundColor="rgba(0,0,0,0)"
           pointsData={points}
@@ -73,25 +84,20 @@ export default function HomePage() {
       <div className="absolute top-0 left-0 w-full h-full flex flex-col justify-center items-center text-center p-4">
         {isPosting ? (
           <div className="w-full max-w-2xl bg-slate-900/50 backdrop-blur-md p-8 rounded-lg animate-fade-in">
-            {/* 👇 5. We pass the new, correct function to the form */}
             <PostForm onPostSuccess={handlePostSuccess} /> 
           </div>
         ) : (
           <>
-            <h1 className="text-5xl font-bold text-white mb-4 animate-fade-in-down">
-              What does the world think?
-            </h1>
-            <p className="text-xl text-slate-400 mb-8 animate-fade-in-up">
-              Share a thought. Get honest validation. Stay anonymous.
-            </p>
+            <h1 className="text-5xl ...">What does the world think?</h1>
+            <p className="text-xl ...">Share a thought...</p>
             <button
               onClick={handleShareClick}
-              className="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg text-lg hover:bg-blue-700 transition-colors animate-pulse-slow"
+              className="bg-blue-600 ..."
             >
               Share a Thought
             </button>
             <Link href="/feed">
-              <span className="absolute bottom-10 text-slate-400 hover:text-white transition-colors cursor-pointer animate-fade-in">
+              <span className="absolute bottom-10 ...">
                 (or, Explore the Feed)
               </span>
             </Link>
