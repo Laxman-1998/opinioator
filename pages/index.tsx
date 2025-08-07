@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 import { useAuth } from '../lib/auth';
 import PostForm from '../components/PostForm';
-import ThoughtLaunchAnimation from '../components/ThoughtLaunchAnimation'; // 👈 1. We need to import the animation
+import ThoughtLaunchAnimation from '../components/ThoughtLaunchAnimation'; // 👈 1. We need this import
 
 const Globe = dynamic(() => import('react-globe.gl'), { 
   ssr: false,
@@ -20,7 +20,7 @@ export default function HomePage() {
   const [animationState, setAnimationState] = useState<'idle' | 'launching' | 'spreading'>('idle');
 
   useEffect(() => {
-    // This is your excellent globe points logic, it remains unchanged.
+    // Your globe points logic is preserved
     const generatePoints = () => {
       const newPoints = Array.from({ length: 10 }).map(() => ({
         lat: (Math.random() - 0.5) * 180,
@@ -43,7 +43,7 @@ export default function HomePage() {
     }
   };
 
-  // 👇 3. This is the corrected success handler. It now triggers the animation.
+  // 👇 3. This is the corrected success handler. It now closes the form and triggers the animation.
   const handlePostSuccess = useCallback(() => {
     setIsPosting(false); // Close the form
     setAnimationState('launching'); // Start the animation

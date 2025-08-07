@@ -1,47 +1,66 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Define the props the component will accept
 type AnimationProps = {
   animationState: 'idle' | 'launching' | 'spreading';
 };
 
-// Animation variants for the main "thought" orb
-const orbVariants = {
-  hidden: { scale: 0, opacity: 0 },
-  visible: { 
-    scale: 1, 
+// Animation variants for the container of the spreading particles
+const spreadContainerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
     opacity: 1,
-    transition: { type: 'spring', stiffness: 100, damping: 15, duration: 0.5 }
+    transition: {
+      staggerChildren: 0.05, // Animate each child with a small delay
+    },
   },
-  exit: { 
-    scale: 1.5, 
-    opacity: 0,
-    transition: { duration: 0.5 }
-  }
+  exit: { opacity: 0 },
+};
+
+// Animation for each individual particle
+const particleVariants = {
+  hidden: { scale: 0, opacity: 0 },
+  visible: {
+    scale: 1,
+    opacity: [0, 1, 0], // Fade in and then fade out
+    x: (Math.random() - 0.5) * 600, // Random horizontal destination
+    y: (Math.random() - 0.5) * 600, // Random vertical destination
+    transition: {
+      duration: 1.5,
+      ease: "easeOut",
+    },
+  },
 };
 
 const ThoughtLaunchAnimation = ({ animationState }: AnimationProps) => {
-  // We use AnimatePresence to handle the fade-out animation when the state changes
   return (
     <AnimatePresence>
       {animationState === 'launching' && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
-          {/* This is the main animated element */}
+        <motion.div
+          className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.5 }}
+          transition={{ duration: 0.3 }}
+        >
+          {/* This is the container for the spreading particles */}
           <motion.div
-            variants={orbVariants}
+            variants={spreadContainerVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
+            className="relative"
           >
-            {/* A simple glowing orb to represent the "thought" */}
-            <div className="w-24 h-24 bg-blue-500 rounded-full shadow-[0_0_30px_10px_rgba(59,130,246,0.7)] flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-              </svg>
-            </div>
+            {/* We create 20 particles to scatter */}
+            {Array.from({ length: 20 }).map((_, i) => (
+              <motion.div
+                key={i}
+                variants={particleVariants}
+                className="absolute w-3 h-3 bg-blue-400 rounded-full shadow-[0_0_10px_2px_rgba(59,130,246,0.7)]"
+              />
+            ))}
           </motion.div>
-        </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );

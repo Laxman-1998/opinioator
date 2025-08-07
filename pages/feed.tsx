@@ -12,8 +12,8 @@ const FeedPage = () => {
   const { user, loading: authLoading } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  // 👇 This page now uses its own state for the form, just like index.tsx
   const [isPosting, setIsPosting] = useState(false);
+  // 👇 1. We add the state to control the animation
   const [animationState, setAnimationState] = useState<'idle' | 'launching' | 'spreading'>('idle');
 
   const loadPosts = useCallback(async () => {
@@ -26,15 +26,15 @@ const FeedPage = () => {
     loadPosts().then(() => setLoading(false));
   }, [loadPosts]);
 
-  // This is the updated success handler for the form
+  // 👇 2. This is the corrected success handler that triggers the animation
   const handlePostSuccess = useCallback(() => {
     setIsPosting(false); // Close the form
     setAnimationState('launching'); // Start the animation
 
     setTimeout(() => {
       setAnimationState('idle');
-      loadPosts(); // Reload the posts
-    }, 2500); // Duration for the animation to play out
+      loadPosts(); // Reload the posts after the animation
+    }, 2500); // 2.5 second duration
   }, [loadPosts]);
 
   if (authLoading) {
@@ -43,6 +43,7 @@ const FeedPage = () => {
   
   return (
     <>
+      {/* 👇 3. We render the animation component here */}
       <ThoughtLaunchAnimation animationState={animationState} />
 
       <div className="w-full max-w-4xl mx-auto flex flex-col gap-8">
@@ -52,7 +53,6 @@ const FeedPage = () => {
         </div>
 
         {user && (
-          // This button now controls the local `isPosting` state
           <button onClick={() => setIsPosting(true)} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-center cursor-pointer transition-colors duration-200 self-center">
             Share a Thought
           </button>
@@ -73,6 +73,7 @@ const FeedPage = () => {
               initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
             >
+              {/* 👇 4. We pass the new, correct function to the form */}
               <PostForm onPostSuccess={handlePostSuccess} />
             </motion.div>
           </motion.div>
