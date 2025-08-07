@@ -18,7 +18,7 @@ type PostFormProps = {
 const PostForm = ({ onPostSuccess }: PostFormProps) => {
   const { user } = useAuth();
   const [content, setContent] = useState('');
-  // 👇 3. We update the state to use the templates
+  // 👇 3. We update the state to use the templates by default
   const [label_agree, setLabelAgree] = useState(pollTemplates[0].agree);
   const [label_disagree, setLabelDisagree] = useState(pollTemplates[0].disagree);
   const [isLoading, setIsLoading] = useState(false);
@@ -48,7 +48,7 @@ const PostForm = ({ onPostSuccess }: PostFormProps) => {
       const newPost = {
         content: content,
         user_id: user.id,
-        anonymous_name, // 👈 5. We add it here
+        anonymous_name, // 👈 5. We add it to the object being saved
         label_agree: label_agree,
         label_disagree: label_disagree,
         country: user.user_metadata.country || null
