@@ -9,32 +9,30 @@ type PostCardProps = {
 };
 
 const PostCard = ({ post, isLink = true }: PostCardProps) => {
-  const [currentPost, setCurrentPost] = useState(post);
+  // We now manage vote counts separately, not a whole copy of the post
+  const [agreeCount, setAgreeCount] = useState(post.agree_count ?? 0);
+  const [disagreeCount, setDisagreeCount] = useState(post.disagree_count ?? 0);
   const [userVote, setUserVote] = useState<string | null>(null);
   const [sliderValue, setSliderValue] = useState(50);
 
-  // 👇 THIS IS THE FIX: This hook ensures that if the post data from the
-  // parent component refreshes, our card's internal state updates with it.
   useEffect(() => {
-    setCurrentPost(post);
+    // Reset local state if the underlying post prop changes
+    setAgreeCount(post.agree_count ?? 0);
+    setDisagreeCount(post.disagree_count ?? 0);
+    setUserVote(localStorage.getItem(`voted_on_post_${post.id}`));
   }, [post]);
-
-  useEffect(() => {
-    const vote = localStorage.getItem(`voted_on_post_${post.id}`);
-    if (vote) {
-      setUserVote(vote);
-    }
-  }, [post.id]);
 
   const handleVote = async (voteType: 'agree' | 'disagree') => {
     if (userVote) return;
     localStorage.setItem(`voted_on_post_${post.id}`, voteType);
     setUserVote(voteType);
-    setCurrentPost(prevPost => ({
-      ...prevPost,
-      agree_count: (prevPost.agree_count ?? 0) + (voteType === 'agree' ? 1 : 0),
-      disagree_count: (prevPost.disagree_count ?? 0) + (voteType === 'disagree' ? 1 : 0),
-    }));
+
+    if (voteType === 'agree') {
+      setAgreeCount(c => c + 1);
+    } else {
+      setDisagreeCount(c => c + 1);
+    }
+
     await fetch('/api/vote', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -48,28 +46,26 @@ const PostCard = ({ post, isLink = true }: PostCardProps) => {
     handleVote(voteType);
   };
   
-  const agreeCount = currentPost.agree_count ?? 0;
-  const disagreeCount = currentPost.disagree_count ?? 0;
   const totalVotes = agreeCount + disagreeCount;
   const agreePercentage = totalVotes === 0 ? 50 : Math.round((agreeCount / totalVotes) * 100);
 
   const CardContent = (
     <div className={`bg-slate-900/50 p-5 rounded-lg border border-slate-800 transition-colors ${isLink ? 'cursor-pointer hover:border-blue-500' : ''}`}>
-      {/* This part is already correct in your code */}
-      {currentPost.anonymous_name && (
+      {/* This now correctly reads from the post prop */ }
+      {post.anonymous_name && (
         <p className="text-slate-400 text-sm italic mb-2">
-          ✨ {currentPost.anonymous_name}
+          ✨ {post.anonymous_name}
         </p>
       )}
 
-      <p className="text-slate-200 text-lg">{currentPost.content}</p>
+      <p className="text-slate-200 text-lg">{post.content}</p>
       
       <div className="mt-6 pt-4 border-t border-slate-800">
         {userVote ? (
             <div>
               <div className="flex justify-between text-sm font-bold mb-1">
-                <span className="text-red-400">{currentPost.label_disagree ?? 'Disagree'}</span>
-                <span className="text-green-400">{currentPost.label_agree ?? 'Agree'}</span>
+                <span className="text-red-400">{post.label_disagree ?? 'Disagree'}</span>
+                <span className="text-green-400">{post.label_agree ?? 'Agree'}</span>
               </div>
               <div className="w-full bg-slate-700 rounded-full h-2.5">
                 <div className="bg-gradient-to-r from-red-500 via-purple-500 to-green-500 h-2.5 rounded-full" style={{ width: `${agreePercentage}%` }} />
@@ -79,8 +75,8 @@ const PostCard = ({ post, isLink = true }: PostCardProps) => {
         ) : (
             <div onClick={(e) => isLink && e.stopPropagation()}>
               <div className="flex justify-between text-sm font-bold mb-1">
-                <span className="text-red-400">{currentPost.label_disagree ?? 'Disagree'}</span>
-                <span className="text-green-400">{currentPost.label_agree ?? 'Agree'}</span>
+                <span className="text-red-400">{post.label_disagree ?? 'Disagree'}</span>
+                <span className="text-green-400">{post.label_agree ?? 'Agree'}</span>
               </div>
               <Slider
                 min={0}

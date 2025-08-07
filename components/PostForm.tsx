@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import toast from 'react-hot-toast';
 import { useAuth } from '../lib/auth';
-import { generateAnonymousName } from '../lib/generateAnonymousName'; // 👈 1. We need this import
+import { generateAnonymousName } from '../lib/generateAnonymousName';
 
-// 👇 2. We add the poll templates
+// 👇 1. We add the poll templates array
 const pollTemplates = [
   { display: 'Standard: Agree / Disagree', agree: 'Agree', disagree: 'Disagree' },
   { display: 'Confirmation: Yes / No', agree: 'Yes', disagree: 'No' },
@@ -18,12 +18,12 @@ type PostFormProps = {
 const PostForm = ({ onPostSuccess }: PostFormProps) => {
   const { user } = useAuth();
   const [content, setContent] = useState('');
-  // 👇 3. We update the state to use the templates by default
+  // 👇 2. The state now uses the templates for its default values
   const [label_agree, setLabelAgree] = useState(pollTemplates[0].agree);
   const [label_disagree, setLabelDisagree] = useState(pollTemplates[0].disagree);
   const [isLoading, setIsLoading] = useState(false);
 
-  // This function updates the labels when the user changes the dropdown selection
+  // 👇 3. This new function handles changes from the dropdown
   const handleTemplateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedIndex = parseInt(e.target.value, 10);
     const selectedTemplate = pollTemplates[selectedIndex];
@@ -31,6 +31,7 @@ const PostForm = ({ onPostSuccess }: PostFormProps) => {
     setLabelDisagree(selectedTemplate.disagree);
   };
 
+  // This is your original, working handleSubmit function. It is preserved.
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!user) {
@@ -40,15 +41,13 @@ const PostForm = ({ onPostSuccess }: PostFormProps) => {
     if (content.trim().length === 0) return;
     setIsLoading(true);
     
-    // 👇 4. We generate the anonymous name
     const anonymous_name = generateAnonymousName();
 
     try {
-      // Create the new post object, now with the anonymous name
       const newPost = {
         content: content,
         user_id: user.id,
-        anonymous_name, // 👈 5. We add it to the object being saved
+        anonymous_name,
         label_agree: label_agree,
         label_disagree: label_disagree,
         country: user.user_metadata.country || null
@@ -81,7 +80,7 @@ const PostForm = ({ onPostSuccess }: PostFormProps) => {
           disabled={isLoading}
         />
         
-        {/* 👇 6. We replace your text inputs with the template dropdown */}
+        {/* 👇 4. Your original text inputs are replaced by this dropdown */}
         <div>
             <label htmlFor="poll_template" className="block text-sm font-medium text-slate-400 mb-1">Poll Type</label>
             <select
@@ -98,8 +97,14 @@ const PostForm = ({ onPostSuccess }: PostFormProps) => {
             </select>
         </div>
 
-        <div className="flex justify-end items-center">
-          {/* Your original "Share Thought" button is preserved */}
+        <div className="flex justify-between items-center">
+           <button 
+             type="button" 
+             onClick={() => { /* This button is preserved for future use */ }}
+             className="text-xs text-slate-400 border border-slate-700 py-1 px-3 rounded-full hover:bg-slate-800 hover:text-white transition-colors"
+           >
+             Choose a template...
+           </button>
           <button
             type="submit"
             className="bg-blue-600 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-slate-600 disabled:cursor-not-allowed self-end"

@@ -13,8 +13,7 @@ const CreatePostPage = () => {
     }
   }, [user, loading, router]);
 
-  // This function will be called by your form when it is successful.
-  // Its only job is to redirect the user back to the feed.
+  // This function's only job is to redirect.
   const handlePostSuccess = () => {
     router.push('/feed');
   };
@@ -29,7 +28,6 @@ const CreatePostPage = () => {
         <h1 className="text-4xl font-bold">Share Your Thought</h1>
         <p className="text-slate-400 mt-2">Your identity will remain anonymous.</p>
       </div>
-      {/* 👇 THE FIX IS HERE: We pass the prop with the correct name your PostForm expects */}
       <PostForm onPostSuccess={handlePostSuccess} />
     </div>
   );
