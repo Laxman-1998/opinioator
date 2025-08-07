@@ -1,27 +1,21 @@
+const emotions = [
+  'Happy', 'Hopeful', 'Curious', 'Brave', 'Calm', 'Eager', 'Fearless', 'Gentle',
+  'Jolly', 'Kind', 'Lively', 'Proud', 'Silly', 'Witty', 'Pensive', 'Quiet'
+];
+
+const animals: { [key: string]: string } = {
+  'Ape': '🦍', 'Bear': '🐻', 'Cat': '🐈', 'Dog': '🐕', 'Eagle': '🦅', 'Frog': '🐸',
+  'Goat': '🐐', 'Hawk': 'Hawk', 'Ibex': '🐐', 'Jaguar': '🐆', 'Koala': '🐨', 'Lion': '🦁',
+  'Mouse': '🐁', 'Newt': '🦎', 'Owl': '🦉', 'Panda': '🐼', 'Quail': '🐦', 'Rabbit': '🐇',
+  'Snake': '🐍', 'Tiger': '🐅', 'Urchin': '🌊', 'Viper': '🐍', 'Wolf': '🐺', 'Yak': '🐃', 'Zebra': '🦓'
+};
+
 export function generateAnonymousName(): string {
-  const options = [
-    { animal: "Fox", emoji: "🦊" },
-    { animal: "Owl", emoji: "🦉" },
-    { animal: "Panda", emoji: "🐼" },
-    { animal: "Dolphin", emoji: "🐬" },
-    { animal: "Turtle", emoji: "🐢" },
-    { animal: "Elephant", emoji: "🐘" },
-    { animal: "Butterfly", emoji: "🦋" },
-    { animal: "Rabbit", emoji: "🐇" },
-    { animal: "Koala", emoji: "🐨" },
-    { animal: "Falcon", emoji: "🦅" },
-    { animal: "Penguin", emoji: "🐧" },
-    { animal: "Otter", emoji: "🦦" },
-    { animal: "Bear", emoji: "🐻" }
-  ];
+  const animalKeys = Object.keys(animals);
+  const randomEmotion = emotions[Math.floor(Math.random() * emotions.length)];
+  const randomAnimalName = animalKeys[Math.floor(Math.random() * animalKeys.length)];
+  const animalEmoji = animals[randomAnimalName];
+  const randomNumber = Math.floor(Math.random() * 900) + 100; // 3-digit number
 
-  const emotions = [
-    "Hopeful", "Curious", "Thoughtful", "Anxious", "Grateful", "Gentle",
-    "Lonely", "Brave", "Wistful", "Calm", "Resilient", "Inspired", "Quiet"
-  ];
-
-  const emotion = emotions[Math.floor(Math.random() * emotions.length)];
-  const choice = options[Math.floor(Math.random() * options.length)];
-
-  return `${emotion} ${choice.animal} ${choice.emoji}`;
+  return `✨ ${randomEmotion}${randomAnimalName}${randomNumber} ${animalEmoji}`;
 }

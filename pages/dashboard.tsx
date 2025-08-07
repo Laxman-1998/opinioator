@@ -4,9 +4,9 @@ import { useAuth } from '../lib/auth';
 import { Post } from '../lib/types';
 import PostCard from '../components/PostCard';
 import { motion, AnimatePresence } from 'framer-motion';
-import { fetchUserPosts } from '../lib/posts'; // 👈 1. Import the corrected function
+import { fetchUserPosts } from '../lib/posts';
 
-// This is your beautiful, polished card component. It remains unchanged.
+// This is your polished card. We are just adding the name display to it.
 const DashboardPostCard = ({ post, onClick, index }: { post: Post; onClick: () => void; index: number }) => {
   const agreeCount = post.agree_count ?? 0;
   const disagreeCount = post.disagree_count ?? 0;
@@ -15,14 +15,20 @@ const DashboardPostCard = ({ post, onClick, index }: { post: Post; onClick: () =
 
   return (
     <motion.div
-      className="relative bg-slate-900/50 border border-slate-800 rounded-xl p-6 cursor-pointer group backdrop-blur-sm transition-colors duration-200"
+      className="relative bg-slate-900/50 border border-slate-800 rounded-xl p-6 cursor-pointer group backdrop-blur-sm transition-colors duration-200 flex flex-col"
       onClick={onClick}
       initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', stiffness: 100, damping: 20, delay: index * 0.05 }}
       whileHover={{ scale: 1.03, borderColor: '#3b82f6', boxShadow: '0 0 20px rgba(59, 130, 246, 0.2)' }}
     >
-      <p className="text-white font-semibold text-lg mb-4 line-clamp-4">{post.content}</p>
+      {/* 👇 THE FIX IS HERE: We display the anonymous name if it exists */}
+      {post.anonymous_name && (
+        <p className="text-slate-400 text-sm italic mb-2">
+          {post.anonymous_name}
+        </p>
+      )}
+      <p className="text-white font-semibold text-lg mb-4 line-clamp-4 flex-grow">{post.content}</p>
       <div className="flex justify-between items-end mt-auto">
         <div className="text-xs text-slate-400">
           <p>{totalVotes} votes</p>
@@ -36,6 +42,7 @@ const DashboardPostCard = ({ post, onClick, index }: { post: Post; onClick: () =
   );
 };
 
+// The rest of your file is perfect and remains unchanged.
 const backdropVariants = { hidden: { opacity: 0 }, visible: { opacity: 1 } };
 const modalVariants = {
   hidden: { y: "50px", opacity: 0 },
@@ -58,7 +65,6 @@ export default function DashboardPage() {
     const getMyPosts = async () => {
       if (user) {
         setLoading(true);
-        // 👇 2. THE FIX IS HERE: We call our new, safe function instead of supabase directly
         const data = await fetchUserPosts(user.id);
         if (data) setPosts(data);
         setLoading(false);
@@ -69,17 +75,12 @@ export default function DashboardPage() {
 
   return (
     <div className="relative">
-      {/* Your starfield background remains unchanged */}
       <div className="fixed top-0 left-0 w-full h-full -z-10">
         <div className="stars-container">
-          <div className="stars1"></div>
-          <div className="stars2"></div>
-          <div className="stars3"></div>
+          <div className="stars1"></div> <div className="stars2"></div> <div className="stars3"></div>
         </div>
       </div>
-
       <h2 className="text-3xl font-bold text-white mb-8">My Posts</h2>
-      
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="h-48 w-full bg-slate-800/70 rounded-xl animate-pulse"></div>
@@ -96,16 +97,11 @@ export default function DashboardPage() {
             <h3 className="text-xl font-bold text-white">You haven't posted any thoughts yet.</h3>
         </div>
       )}
-
-      {/* Your modal logic remains unchanged */}
       <AnimatePresence>
         {selectedPost && (
           <motion.div 
             className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-            variants={backdropVariants}
-            initial="hidden"
-            animate="visible"
-            exit="hidden"
+            variants={backdropVariants} initial="hidden" animate="visible" exit="hidden"
             onClick={() => setSelectedPost(null)}
           >
             <motion.div 
