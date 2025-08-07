@@ -13,6 +13,12 @@ const PostCard = ({ post, isLink = true }: PostCardProps) => {
   const [userVote, setUserVote] = useState<string | null>(null);
   const [sliderValue, setSliderValue] = useState(50);
 
+  // 👇 THIS IS THE FIX: This hook ensures that if the post data from the
+  // parent component refreshes, our card's internal state updates with it.
+  useEffect(() => {
+    setCurrentPost(post);
+  }, [post]);
+
   useEffect(() => {
     const vote = localStorage.getItem(`voted_on_post_${post.id}`);
     if (vote) {
@@ -47,11 +53,9 @@ const PostCard = ({ post, isLink = true }: PostCardProps) => {
   const totalVotes = agreeCount + disagreeCount;
   const agreePercentage = totalVotes === 0 ? 50 : Math.round((agreeCount / totalVotes) * 100);
 
-  // This is the content of our card
   const CardContent = (
     <div className={`bg-slate-900/50 p-5 rounded-lg border border-slate-800 transition-colors ${isLink ? 'cursor-pointer hover:border-blue-500' : ''}`}>
-      {/* 👇 THIS IS THE FIX. We check if `anonymous_name` exists on the `currentPost` state object.
-          Your old code checked `post.anonymous_name`, but the component uses `currentPost`. */}
+      {/* This part is already correct in your code */}
       {currentPost.anonymous_name && (
         <p className="text-slate-400 text-sm italic mb-2">
           ✨ {currentPost.anonymous_name}
@@ -97,7 +101,6 @@ const PostCard = ({ post, isLink = true }: PostCardProps) => {
 
   return isLink ? (
     <Link href={`/post/${post.id}`} key={post.id}>
-      {/* We need an `<a>` tag here for the Link to correctly apply to the div */}
       <a>{CardContent}</a>
     </Link>
   ) : (

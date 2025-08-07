@@ -2,6 +2,9 @@ import { useRouter } from 'next/router';
 import PostForm from '../components/PostForm';
 import { useAuth } from '../lib/auth';
 import { useEffect } from 'react';
+import { supabase } from '../lib/supabaseClient';
+import { generateAnonymousName } from '../lib/generateAnonymousName';
+import toast from 'react-hot-toast';
 
 const CreatePostPage = () => {
   const router = useRouter();
@@ -13,8 +16,31 @@ const CreatePostPage = () => {
     }
   }, [user, loading, router]);
 
-  const handlePostSuccess = () => {
-    router.push('/feed');
+  // This function now contains the submission logic and redirect
+  const handlePostSubmit = async (content: string, agreeLabel: string, disagreeLabel: string): Promise<boolean> => {
+    if (!user) return false;
+
+    const loadingToast = toast.loading('Sharing your thought...');
+    const anonymous_name = generateAnonymousName();
+    const newPost = { 
+      user_id: user.id, 
+      content, 
+      anonymous_name, 
+      label_agree: agreeLabel, 
+      label_disagree: disagreeLabel 
+    };
+
+    const { error } = await supabase.from('posts').insert([newPost]);
+
+    if (error) {
+      console.error('Error creating post:', error);
+      toast.error(`Error: ${error.message}`, { id: loadingToast });
+      return false;
+    } else {
+      toast.success('Your thought has been shared!', { id: loadingToast });
+      router.push('/feed'); // Redirect on success!
+      return true;
+    }
   };
 
   if (loading || !user) {
@@ -27,7 +53,7 @@ const CreatePostPage = () => {
         <h1 className="text-4xl font-bold">Share Your Thought</h1>
         <p className="text-slate-400 mt-2">Your identity will remain anonymous.</p>
       </div>
-      <PostForm onPostSuccess={handlePostSuccess} />
+      <PostForm onPostSubmit={handlePostSubmit} />
     </div>
   );
 };
