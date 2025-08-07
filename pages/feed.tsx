@@ -4,8 +4,6 @@ import { useAuth } from '../lib/auth';
 import { fetchAllPosts } from '../lib/posts';
 import PostList from '../components/PostList';
 import Link from 'next/link';
-// We are not using the modal on this page anymore
-// so we remove the modal-related imports
 
 const FeedPage = () => {
   const { user, loading: authLoading } = useAuth();
