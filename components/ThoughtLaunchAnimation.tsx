@@ -5,19 +5,37 @@ type AnimationProps = {
   animationState: 'idle' | 'launching' | 'spreading';
 };
 
-// Animation variants for the container to fade in and out
+// Variants for the main container (fades in/out, adds blur)
 const containerVariants = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.5 } },
+  visible: { opacity: 1, transition: { duration: 0.3 } },
   exit: { opacity: 0, transition: { duration: 0.5, delay: 1.5 } },
 };
 
-// Animation variants for the orb to pulse
-const orbVariants = {
-  hidden: { scale: 0 },
+// Variants for the container of the spreading particles
+const spreadContainerVariants = {
+  hidden: { opacity: 0 },
   visible: {
-    scale: [0, 1.2, 1], // Keyframes: grow, overshoot slightly, then settle
-    transition: { type: 'spring', stiffness: 200, damping: 20 },
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.04, // Animate each particle with a tiny delay
+      delayChildren: 0.3,   // Wait a moment after the main orb appears
+    },
+  },
+};
+
+// Variants for each individual scattering particle
+const particleVariants = {
+  hidden: { scale: 0, opacity: 0 },
+  visible: {
+    x: () => (Math.random() - 0.5) * (window.innerWidth * 0.8),  // Random horizontal destination
+    y: () => (Math.random() - 0.5) * (window.innerHeight * 0.8), // Random vertical destination
+    scale: [0, 1.1, 0], // Appear, grow slightly, then shrink to nothing
+    opacity: [0, 1, 0],   // Fade in and then fade out
+    transition: {
+      duration: 1.5,
+      ease: "easeOut",
+    },
   },
 };
 
@@ -26,30 +44,25 @@ const ThoughtLaunchAnimation = ({ animationState }: AnimationProps) => {
     <AnimatePresence>
       {animationState === 'launching' && (
         <motion.div
-          // This container handles the overall presence and background blur
           className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none backdrop-blur-sm"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
           exit="exit"
         >
+          {/* This container will manage the burst of particles */}
           <motion.div
-            // This is the orb itself, with the pulse animation
-            variants={orbVariants}
-            className="w-24 h-24 bg-blue-500 rounded-full shadow-[0_0_40px_15px_rgba(59,130,246,0.6)] flex items-center justify-center"
+            variants={spreadContainerVariants}
+            className="relative"
           >
-            {/* The icon inside the orb */}
-            <motion.svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-12 w-12 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1, transition: { delay: 0.3 } }}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </motion.svg>
+            {/* We create 25 particles to scatter */}
+            {Array.from({ length: 25 }).map((_, i) => (
+              <motion.div
+                key={i}
+                variants={particleVariants}
+                className="absolute w-3 h-3 bg-blue-400 rounded-full shadow-[0_0_10px_2px_rgba(59,130,246,0.7)]"
+              />
+            ))}
           </motion.div>
         </motion.div>
       )}
