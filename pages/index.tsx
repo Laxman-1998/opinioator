@@ -11,28 +11,28 @@ const Globe = dynamic(() => import('react-globe.gl'), {
   loading: () => <div className="absolute inset-0 flex items-center justify-center"><p>Loading Globe...</p></div>
 });
 
-// Define the type for our points for clarity
 type Point = { lat: number; lng: number; size: number; color: string };
+type Arc = { startLat: number; startLng: number; endLat: number; endLng: number; color: string };
+type Ring = { lat: number; lng: number; maxR: number; transitionMs: number; ringColor: () => string; };
 
 export default function HomePage() {
   const { user } = useAuth();
   const router = useRouter();
   const [isPosting, setIsPosting] = useState(false);
-  // This state holds the faint, ambient "stars"
   const [ambientPoints, setAmbientPoints] = useState<Point[]>([]);
-  // 👇 1. This new state will hold our single, bright "launch star"
-  const [launchPoint, setLaunchPoint] = useState<Point | null>(null);
+  // 👇 1. New state for the connecting arcs and the ripple effect
+  const [arcs, setArcs] = useState<Arc[]>([]);
+  const [rings, setRings] = useState<Ring[]>([]);
   
   const globeEl = useRef<GlobeMethods | undefined>();
 
   useEffect(() => {
-    // Your logic for the ambient background points is preserved
     const generatePoints = () => {
       const newPoints = Array.from({ length: 10 }).map(() => ({
         lat: (Math.random() - 0.5) * 180,
         lng: (Math.random() - 0.5) * 360,
         size: Math.random() * 0.4,
-        color: 'rgba(59, 130, 246, 0.25)', // Made them fainter
+        color: 'rgba(59, 130, 246, 0.25)',
       }));
       setAmbientPoints(newPoints);
     };
@@ -47,25 +47,37 @@ export default function HomePage() {
   };
 
   const handlePostSuccess = useCallback(() => {
-    setIsPosting(false); // Close the form
+    setIsPosting(false);
 
-    // 👇 2. Create the "launch star"
-    const newLaunchPoint: Point = {
-      lat: (Math.random() - 0.5) * 160,
-      lng: (Math.random() - 0.5) * 360,
-      size: 0.8, // Make it larger and more prominent
-      color: 'rgba(255, 255, 255, 0.95)', // Make it bright white
+    // 2. Define the launch point
+    const startLat = (Math.random() - 0.5) * 160;
+    const startLng = (Math.random() - 0.5) * 360;
+
+    // 3. Create a ripple effect at the launch point
+    const newRing: Ring = {
+      lat: startLat,
+      lng: startLng,
+      maxR: 5,
+      transitionMs: 3000,
+      ringColor: () => 'rgba(255, 255, 255, 0.5)',
     };
-    setLaunchPoint(newLaunchPoint);
+    setRings([newRing]);
 
-    // Redirect after the animation has had time to play
+    // 4. Create several connecting arcs
+    const newArcs = Array.from({ length: 5 }).map(() => ({
+      startLat,
+      startLng,
+      endLat: (Math.random() - 0.5) * 180,
+      endLng: (Math.random() - 0.5) * 360,
+      color: `rgba(59, 130, 246, ${Math.random() * 0.5 + 0.3})`,
+    }));
+    setArcs(newArcs);
+    
+    // Redirect after the animation
     setTimeout(() => {
       router.push('/feed');
-    }, 3500);
+    }, 4000);
   }, [router]);
-
-  // 👇 3. Combine the ambient points and the new launch point into one array for the globe
-  const allPoints = launchPoint ? [...ambientPoints, launchPoint] : ambientPoints;
 
   return (
     <div className="relative w-screen h-[calc(100vh-81px)] -ml-[calc(50vw-50%)] overflow-hidden">
@@ -74,12 +86,21 @@ export default function HomePage() {
           ref={globeEl}
           globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
           backgroundColor="rgba(0,0,0,0)"
-          pointsData={allPoints} // 👈 4. Pass the combined array to the globe
+          pointsData={ambientPoints}
           pointAltitude="size"
           pointColor="color"
-          pointResolution={8}
-          // Animate points fading in
-          pointsTransitionDuration={1000} 
+          // 👇 5. Add the new props to render the animation
+          arcsData={arcs}
+          arcColor="color"
+          arcDashLength={0.4}
+          arcDashGap={0.6}
+          arcDashAnimateTime={2000}
+          arcStroke={0.3}
+          ringsData={rings}
+          ringColor="ringColor"
+          ringMaxRadius="maxR"
+          ringPropagationSpeed={1}
+          ringRepeatPeriod={700}
         />
       </div>
 
