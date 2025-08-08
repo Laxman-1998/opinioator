@@ -6,7 +6,6 @@ import PostCard from '../components/PostCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fetchUserPosts } from '../lib/posts';
 
-// This is your polished card. We are just adding the name display to it.
 const DashboardPostCard = ({ post, onClick, index }: { post: Post; onClick: () => void; index: number }) => {
   const agreeCount = post.agree_count ?? 0;
   const disagreeCount = post.disagree_count ?? 0;
@@ -22,7 +21,7 @@ const DashboardPostCard = ({ post, onClick, index }: { post: Post; onClick: () =
       transition={{ type: 'spring', stiffness: 100, damping: 20, delay: index * 0.05 }}
       whileHover={{ scale: 1.03, borderColor: '#3b82f6', boxShadow: '0 0 20px rgba(59, 130, 246, 0.2)' }}
     >
-      {/* 👇 THE FIX IS HERE: We display the anonymous name if it exists */}
+      {/* 👇 THE FIX IS HERE: The anonymous name is now displayed on the card */}
       {post.anonymous_name && (
         <p className="text-slate-400 text-sm italic mb-2">
           {post.anonymous_name}
@@ -42,7 +41,6 @@ const DashboardPostCard = ({ post, onClick, index }: { post: Post; onClick: () =
   );
 };
 
-// The rest of your file is perfect and remains unchanged.
 const backdropVariants = { hidden: { opacity: 0 }, visible: { opacity: 1 } };
 const modalVariants = {
   hidden: { y: "50px", opacity: 0 },
