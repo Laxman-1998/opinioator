@@ -1,90 +1,117 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Post } from '../lib/types';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import Link from 'next/link';
+import dynamic from 'next/dynamic';
+import { useRouter } from 'next/router';
 import { useAuth } from '../lib/auth';
-import { fetchAllPosts } from '../lib/posts';
-import PostList from '../components/PostList';
 import PostForm from '../components/PostForm';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useModal } from '../context/ModalContext';
-import ThoughtLaunchAnimation from '../components/ThoughtLaunchAnimation';
+import { GlobeMethods } from 'react-globe.gl';
 
-const FeedPage = () => {
-  const { user, loading: authLoading } = useAuth();
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { isModalOpen, openModal, closeModal } = useModal();
-  const [animationState, setAnimationState] = useState<'idle' | 'launching'>('idle');
+const Globe = dynamic(() => import('react-globe.gl'), { 
+  ssr: false,
+  loading: () => <div className="absolute inset-0 flex items-center justify-center"><p>Loading Globe...</p></div>
+});
 
-  const loadPosts = useCallback(async () => {
-    const fetchedPosts = await fetchAllPosts();
-    setPosts(fetchedPosts);
-  }, []);
+// Define types for our globe data for clarity
+type Point = { lat: number; lng: number; size: number; color: string; };
+type Ring = { lat: number; lng: number; };
+
+export default function HomePage() {
+  const { user } = useAuth();
+  const router = useRouter();
+  const [isPosting, setIsPosting] = useState(false);
+  const [ambientPoints, setAmbientPoints] = useState<Point[]>([]);
+  // 👇 1. New state for the ripple effect and the messenger icon
+  const [rings, setRings] = useState<Ring[]>([]);
+  const [messenger, setMessenger] = useState<Point | null>(null);
+  
+  const globeEl = useRef<GlobeMethods | undefined>();
 
   useEffect(() => {
-    setLoading(true);
-    loadPosts().then(() => setLoading(false));
-  }, [loadPosts]);
+    // This generates the ambient background points
+    const generatePoints = () => {
+      const newPoints = Array.from({ length: 20 }).map(() => ({
+        lat: (Math.random() - 0.5) * 180, lng: (Math.random() - 0.5) * 360,
+        size: Math.random() * 0.3, color: 'rgba(59, 130, 246, 0.25)',
+      }));
+      setAmbientPoints(newPoints);
+    };
+    generatePoints();
+  }, []);
+
+  const handleShareClick = () => {
+    if (user) setIsPosting(true);
+    else router.push('/signup');
+  };
 
   const handlePostSuccess = useCallback(() => {
-    closeModal();
-    setAnimationState('launching');
+    setIsPosting(false);
 
+    const startLat = (Math.random() - 0.5) * 160;
+    const startLng = (Math.random() - 0.5) * 360;
+
+    // 2. Create the "Messenger" icon as a bright white point
+    setMessenger({ lat: startLat, lng: startLng, size: 0.5, color: 'white' });
+
+    // 3. After a brief delay, trigger the ripple effect from that same point
     setTimeout(() => {
-      setAnimationState('idle');
-      loadPosts();
-    }, 2500);
-  }, [closeModal, loadPosts]);
+      setRings([{ lat: startLat, lng: startLng }]);
+    }, 500); // 500ms delay
+    
+    // 4. Clean up and redirect after the animation sequence
+    setTimeout(() => {
+      setMessenger(null);
+      setRings([]);
+      router.push('/feed');
+    }, 4000);
+  }, [router]);
 
-  if (authLoading) {
-    return <p className="text-center">Authenticating...</p>;
-  }
-  
   return (
-    <>
-      <ThoughtLaunchAnimation animationState={animationState} />
-
-      <div className="w-full max-w-4xl mx-auto flex flex-col gap-8">
-        {/* 👇 This section has been restyled to be more impactful */}
-        <div className="text-center py-8">
-          <h1 className="text-5xl font-bold text-white tracking-tight">Global Feed</h1>
-          <p className="text-lg text-slate-400 mt-4 max-w-2xl mx-auto">
-            Honest thoughts and personal dilemmas from around the world.
-          </p>
-        </div>
-
-        {user && (
-          <div className="flex justify-center">
-            <button 
-              onClick={openModal} 
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-colors duration-200 transform hover:scale-105"
-            >
-              Share Your Opinion
-            </button>
-          </div>
-        )}
-        
-        {loading ? <p className="text-center">Loading feed...</p> : <PostList posts={posts} />}
+    <div className="relative w-screen h-[calc(100vh-81px)] -ml-[calc(50vw-50%)] overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-full">
+        <Globe
+          ref={globeEl}
+          globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
+          backgroundColor="rgba(0,0,0,0)"
+          // 👇 5. We combine the ambient points and the new messenger icon
+          pointsData={messenger ? [...ambientPoints, messenger] : ambientPoints}
+          pointAltitude="size"
+          pointColor="color"
+          pointsTransitionDuration={1000}
+          // 👇 6. Add the new props to render the ripple effect
+          ringsData={rings}
+          ringColor={() => 'rgba(255,255,255,0.5)'}
+          ringMaxRadius={5}
+          ringPropagationSpeed={2}
+          ringRepeatPeriod={1000}
+        />
       </div>
-
-      <AnimatePresence>
-        {isModalOpen && (
-          <motion.div
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={closeModal}
-          >
-            <motion.div
-              className="w-full max-w-2xl"
-              initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
+      <div className="absolute top-0 left-0 w-full h-full flex flex-col justify-center items-center text-center p-4">
+        {isPosting ? (
+          <div className="w-full max-w-2xl bg-slate-900/50 backdrop-blur-md p-8 rounded-lg animate-fade-in">
+            <PostForm onPostSuccess={handlePostSuccess} /> 
+          </div>
+        ) : (
+          <>
+            <h1 className="text-5xl font-bold text-white mb-4 animate-fade-in-down">
+              What does the world think?
+            </h1>
+            <p className="text-xl text-slate-400 mb-8 animate-fade-in-up">
+              Share a thought. Get honest validation. Stay anonymous.
+            </p>
+            <button
+              onClick={handleShareClick}
+              className="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg text-lg hover:bg-blue-700 transition-colors animate-pulse-slow"
             >
-              <PostForm onPostSuccess={handlePostSuccess} />
-            </motion.div>
-          </motion.div>
+              Share a Thought
+            </button>
+            <Link href="/feed">
+              <span className="absolute bottom-10 text-slate-400 hover:text-white transition-colors cursor-pointer animate-fade-in">
+                (or, Explore the Feed)
+              </span>
+            </Link>
+          </>
         )}
-      </AnimatePresence>
-    </>
+      </div>
+    </div>
   );
-};
-
-export default FeedPage;
+}
