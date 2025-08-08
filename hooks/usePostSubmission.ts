@@ -31,6 +31,6 @@ export const usePostSubmission = (successCallback?: () => void) => {
     animationState,
     openPostForm,
     handlePostSuccess,
-    setIsPosting, // Also return the setter for closing the modal via backdrop click
+    setIsPosting,
   };
 };
