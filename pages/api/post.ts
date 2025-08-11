@@ -1,4 +1,3 @@
-// pages/api/post.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { supabase } from '../../lib/supabaseClient';
 import { generateAnonymousName } from '../../lib/generateAnonymousName';
