@@ -1,32 +1,41 @@
-import type { NextApiRequest, NextApiResponse } from "next";
-import { supabase } from "../../lib/supabaseClient";
-import { generateAnonymousName } from "../../lib/generateAnonymousName";
+// pages/api/post.ts
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { supabase } from '../../lib/supabaseClient';
+import { generateAnonymousName } from '../../lib/generateAnonymousName';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === "POST") {
-    const { title, content, user_id, poll_options } = req.body;
+  if (req.method === 'POST') {
+    const { content, label_agree, label_disagree, user_id, country } = req.body;
 
+    if (!content || !user_id) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // ✅ Generate anonymous name for this post
     const anonymous_name = generateAnonymousName();
 
     const { data, error } = await supabase
-      .from("posts")
+      .from('posts')
       .insert([
         {
-          title,
           content,
+          label_agree,
+          label_disagree,
           user_id,
-          poll_options,
-          anonymous_name,
-        },
+          country,
+          anonymous_name // ✅ saved in DB
+        }
       ])
-      .select("*");
+      .select(); // Return inserted rows
 
     if (error) {
-      return res.status(500).json({ error: error.message });
+      console.error('Error creating post:', error);
+      return res.status(500).json({ error: 'Failed to create post' });
     }
 
-    return res.status(200).json({ post: data[0] });
+    res.status(200).json(data[0]);
   } else {
-    return res.status(405).json({ error: "Method not allowed" });
+    res.setHeader('Allow', ['POST']);
+    res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
