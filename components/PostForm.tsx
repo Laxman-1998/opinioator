@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
 import toast from 'react-hot-toast';
 import { useAuth } from '../lib/auth';
 
@@ -22,26 +21,28 @@ const PostForm = ({ onPostSuccess }: PostFormProps) => {
     }
     if (content.trim().length === 0) return;
     setIsLoading(true);
-    
-    try {
-      // Create the new post object
-      const newPost = {
-        content: content,
-        user_id: user.id,
-        label_agree: labelAgree,
-        label_disagree: labelDisagree,
-        // Check for country in user_metadata and add it if it exists
-        country: user.user_metadata.country || null
-      };
 
-      const { error } = await supabase.from('posts').insert([newPost]);
-        
-      if (error) throw error;
+    try {
+      // Call your API route to create the post and generate anonymous_name server-side
+      const response = await fetch('/api/post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: content,
+          user_id: user.id,
+          label_agree: labelAgree,
+          label_disagree: labelDisagree,
+          country: user.user_metadata?.country || null
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create post');
+      }
 
       toast.success('Your thought is now live!');
       setContent('');
       onPostSuccess();
-      
     } catch (error) {
       toast.error('Sorry, something went wrong.');
       console.error('Error posting opinion:', error);
@@ -61,17 +62,29 @@ const PostForm = ({ onPostSuccess }: PostFormProps) => {
           disabled={isLoading}
         />
         <div className="flex items-center gap-4">
-          <input type="text" value={labelDisagree} onChange={(e) => setLabelDisagree(e.target.value)} className="w-full p-2 text-sm bg-slate-800/50 border border-slate-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:outline-none placeholder:text-slate-500 text-center" maxLength={30} />
-          <input type="text" value={labelAgree} onChange={(e) => setLabelAgree(e.target.value)} className="w-full p-2 text-sm bg-slate-800/50 border border-slate-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none placeholder:text-slate-500 text-center" maxLength={30} />
+          <input 
+            type="text" 
+            value={labelDisagree} 
+            onChange={(e) => setLabelDisagree(e.target.value)} 
+            className="w-full p-2 text-sm bg-slate-800/50 border border-slate-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:outline-none placeholder:text-slate-500 text-center" 
+            maxLength={30} 
+          />
+          <input 
+            type="text" 
+            value={labelAgree} 
+            onChange={(e) => setLabelAgree(e.target.value)} 
+            className="w-full p-2 text-sm bg-slate-800/50 border border-slate-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none placeholder:text-slate-500 text-center" 
+            maxLength={30}
+          />
         </div>
         <div className="flex justify-between items-center">
-           <button 
-              type="button" 
-              onClick={() => { /* Logic for template picker can go here */ }}
-              className="text-xs text-slate-400 border border-slate-700 py-1 px-3 rounded-full hover:bg-slate-800 hover:text-white transition-colors"
-           >
-              Choose a template...
-           </button>
+          <button 
+            type="button" 
+            onClick={() => { /* Logic for template picker can go here */ }}
+            className="text-xs text-slate-400 border border-slate-700 py-1 px-3 rounded-full hover:bg-slate-800 hover:text-white transition-colors"
+          >
+            Choose a template...
+          </button>
           <button
             type="submit"
             className="bg-blue-600 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-slate-600 disabled:cursor-not-allowed self-end"
