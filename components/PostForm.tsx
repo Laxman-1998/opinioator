@@ -1,14 +1,31 @@
 // components/PostForm.tsx
 import { useState } from 'react';
+import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../lib/auth';
+
+// Simple sentiment detection
+function detectSentiment(text: string) {
+  const positiveWords = ['good', 'great', 'love', 'happy', 'hope', 'amazing', 'awesome', 'inspired', 'joy'];
+  const negativeWords = ['bad', 'hate', 'sad', 'angry', 'lonely', 'upset', 'worst', 'fear'];
+  
+  const lowerText = text.toLowerCase();
+  let score = 0;
+  positiveWords.forEach(word => lowerText.includes(word) && score++);
+  negativeWords.forEach(word => lowerText.includes(word) && score--);
+
+  if (score > 0) return 'positive';
+  if (score < 0) return 'negative';
+  return 'neutral';
+}
 
 type PostFormProps = {
   onPostSuccess: () => void;
 };
 
 const PostForm = ({ onPostSuccess }: PostFormProps) => {
+  const router = useRouter();
   const { user } = useAuth();
   const [content, setContent] = useState('');
   const [labelDisagree, setLabelDisagree] = useState('Disagree');
@@ -27,19 +44,17 @@ const PostForm = ({ onPostSuccess }: PostFormProps) => {
     setIsLoading(true);
 
     try {
-      // Get the current session (new Supabase SDK method)
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession();
-
+      // Get access token
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !session?.access_token) {
         toast.error('No valid session found. Please log in again.');
         setIsLoading(false);
         return;
       }
 
-      // Send data to our API route
+      // Detect sentiment
+      const sentiment = detectSentiment(content);
+
       const response = await fetch('/api/post', {
         method: 'POST',
         headers: {
@@ -51,6 +66,7 @@ const PostForm = ({ onPostSuccess }: PostFormProps) => {
           label_agree: labelAgree,
           label_disagree: labelDisagree,
           country: user.user_metadata?.country || null,
+          sentiment
         }),
       });
 
@@ -62,6 +78,10 @@ const PostForm = ({ onPostSuccess }: PostFormProps) => {
       toast.success('Your thought is now live!');
       setContent('');
       onPostSuccess();
+
+      // ✅ Redirect after success
+      router.push('/feed');
+
     } catch (error) {
       toast.error('Sorry, something went wrong.');
       console.error('Error posting opinion:', error);
@@ -99,7 +119,6 @@ const PostForm = ({ onPostSuccess }: PostFormProps) => {
         <div className="flex justify-between items-center">
           <button
             type="button"
-            onClick={() => { /* Template picker logic here */ }}
             className="text-xs text-slate-400 border border-slate-700 py-1 px-3 rounded-full hover:bg-slate-800 hover:text-white transition-colors"
           >
             Choose a template...
