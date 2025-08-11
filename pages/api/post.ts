@@ -8,32 +8,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { content, label_agree, label_disagree, user_id, country } = req.body;
 
     if (!content || !user_id) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return res.status(400).json({ error: 'Missing required fields: content or user_id' });
     }
 
-    // ✅ Generate anonymous name for this post
-    const anonymous_name = generateAnonymousName();
+    // Prepare new post data
+    const newPost = {
+      content,
+      label_agree,
+      label_disagree,
+      user_id,
+      country: country || null,
+      anonymous_name: generateAnonymousName()
+    };
 
-    const { data, error } = await supabase
-      .from('posts')
-      .insert([
-        {
-          content,
-          label_agree,
-          label_disagree,
-          user_id,
-          country,
-          anonymous_name // ✅ saved in DB
-        }
-      ])
-      .select(); // Return inserted rows
+    try {
+      // Insert without returning inserted rows to prevent RLS SELECT issues
+      const { error } = await supabase
+        .from('posts')
+        .insert([newPost], { returning: 'minimal' });
 
-    if (error) {
-      console.error('Error creating post:', error);
-      return res.status(500).json({ error: 'Failed to create post' });
+      if (error) {
+        console.error('Supabase insert error:', error, 'Payload:', newPost);
+        return res.status(500).json({ error: 'Failed to create post due to database error' });
+      }
+
+      res.status(201).json({ message: 'Post created successfully' });
+    } catch (error) {
+      console.error('Unexpected error in /api/post:', error);
+      res.status(500).json({ error: 'Unexpected server error' });
     }
-
-    res.status(200).json(data[0]);
   } else {
     res.setHeader('Allow', ['POST']);
     res.status(405).end(`Method ${req.method} Not Allowed`);
