@@ -4,21 +4,9 @@ import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../lib/auth';
+import Sentiment from 'sentiment';
 
-// Simple sentiment detection
-function detectSentiment(text: string) {
-  const positiveWords = ['good', 'great', 'love', 'happy', 'hope', 'amazing', 'awesome', 'inspired', 'joy'];
-  const negativeWords = ['bad', 'hate', 'sad', 'angry', 'lonely', 'upset', 'worst', 'fear'];
-  
-  const lowerText = text.toLowerCase();
-  let score = 0;
-  positiveWords.forEach(word => lowerText.includes(word) && score++);
-  negativeWords.forEach(word => lowerText.includes(word) && score--);
-
-  if (score > 0) return 'positive';
-  if (score < 0) return 'negative';
-  return 'neutral';
-}
+const sentimentAnalyzer = new Sentiment();
 
 type PostFormProps = {
   onPostSuccess: () => void;
@@ -32,6 +20,13 @@ const PostForm = ({ onPostSuccess }: PostFormProps) => {
   const [labelAgree, setLabelAgree] = useState('Agree');
   const [isLoading, setIsLoading] = useState(false);
 
+  const detectSentiment = (text: string): 'positive' | 'negative' | 'neutral' => {
+    const result = sentimentAnalyzer.analyze(text);
+    if (result.score > 0) return 'positive';
+    if (result.score < 0) return 'negative';
+    return 'neutral';
+  };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -44,15 +39,18 @@ const PostForm = ({ onPostSuccess }: PostFormProps) => {
     setIsLoading(true);
 
     try {
-      // Get access token
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
       if (sessionError || !session?.access_token) {
         toast.error('No valid session found. Please log in again.');
         setIsLoading(false);
         return;
       }
 
-      // Detect sentiment
+      // ✅ Detect accurate sentiment
       const sentiment = detectSentiment(content);
 
       const response = await fetch('/api/post', {
@@ -66,7 +64,7 @@ const PostForm = ({ onPostSuccess }: PostFormProps) => {
           label_agree: labelAgree,
           label_disagree: labelDisagree,
           country: user.user_metadata?.country || null,
-          sentiment
+          sentiment,
         }),
       });
 
@@ -79,9 +77,8 @@ const PostForm = ({ onPostSuccess }: PostFormProps) => {
       setContent('');
       onPostSuccess();
 
-      // ✅ Redirect after success
+      // ✅ Redirect to Feed
       router.push('/feed');
-
     } catch (error) {
       toast.error('Sorry, something went wrong.');
       console.error('Error posting opinion:', error);
@@ -96,7 +93,9 @@ const PostForm = ({ onPostSuccess }: PostFormProps) => {
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          className="w-full h-28 p-3 bg-slate-800/50 border border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder:text-slate-500"
+          className="w-full h-28 p-3 bg-slate-800/50 border border-slate-700 rounded-lg 
+                     focus:ring-2 focus:ring-blue-500 focus:outline-none 
+                     placeholder:text-slate-500"
           placeholder="What's on your mind?..."
           disabled={isLoading}
         />
@@ -105,27 +104,34 @@ const PostForm = ({ onPostSuccess }: PostFormProps) => {
             type="text"
             value={labelDisagree}
             onChange={(e) => setLabelDisagree(e.target.value)}
-            className="w-full p-2 text-sm bg-slate-800/50 border border-slate-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:outline-none placeholder:text-slate-500 text-center"
+            className="w-full p-2 text-sm bg-slate-800/50 border border-slate-700 
+                       rounded-lg focus:ring-2 focus:ring-red-500 focus:outline-none 
+                       placeholder:text-slate-500 text-center"
             maxLength={30}
           />
           <input
             type="text"
             value={labelAgree}
             onChange={(e) => setLabelAgree(e.target.value)}
-            className="w-full p-2 text-sm bg-slate-800/50 border border-slate-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none placeholder:text-slate-500 text-center"
+            className="w-full p-2 text-sm bg-slate-800/50 border border-slate-700 
+                       rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none 
+                       placeholder:text-slate-500 text-center"
             maxLength={30}
           />
         </div>
         <div className="flex justify-between items-center">
           <button
             type="button"
-            className="text-xs text-slate-400 border border-slate-700 py-1 px-3 rounded-full hover:bg-slate-800 hover:text-white transition-colors"
+            className="text-xs text-slate-400 border border-slate-700 py-1 px-3 
+                       rounded-full hover:bg-slate-800 hover:text-white transition-colors"
           >
             Choose a template...
           </button>
           <button
             type="submit"
-            className="bg-blue-600 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-slate-600 disabled:cursor-not-allowed self-end"
+            className="bg-blue-600 text-white font-bold py-2.5 px-4 rounded-lg 
+                       hover:bg-blue-700 transition-colors disabled:bg-slate-600 
+                       disabled:cursor-not-allowed self-end"
             disabled={isLoading || content.trim().length === 0}
           >
             {isLoading ? 'Sharing...' : 'Share Thought'}

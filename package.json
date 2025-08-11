@@ -17,7 +17,8 @@
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-globe.gl": "^2.34.0",
-    "react-hot-toast": "^2.5.2"
+    "react-hot-toast": "^2.5.2",
+    "sentiment": "^5.0.2"
   },
   "devDependencies": {
     "@types/node": "18.0.1",
