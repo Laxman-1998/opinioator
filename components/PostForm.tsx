@@ -1,5 +1,7 @@
+// components/PostForm.tsx
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../lib/auth';
 
 type PostFormProps = {
@@ -15,29 +17,46 @@ const PostForm = ({ onPostSuccess }: PostFormProps) => {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+
     if (!user) {
-      toast.error("You must be logged in to post.");
+      toast.error('You must be logged in to post.');
       return;
     }
     if (content.trim().length === 0) return;
+
     setIsLoading(true);
 
     try {
-      // Call your API route to create the post and generate anonymous_name server-side
+      // Get the current session (new Supabase SDK method)
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError || !session?.access_token) {
+        toast.error('No valid session found. Please log in again.');
+        setIsLoading(false);
+        return;
+      }
+
+      // Send data to our API route
       const response = await fetch('/api/post', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify({
-          content: content,
-          user_id: user.id,
+          content,
           label_agree: labelAgree,
           label_disagree: labelDisagree,
-          country: user.user_metadata?.country || null
-        })
+          country: user.user_metadata?.country || null,
+        }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create post');
+        const errData = await response.json();
+        throw new Error(errData.error || 'Failed to create post');
       }
 
       toast.success('Your thought is now live!');
@@ -57,30 +76,30 @@ const PostForm = ({ onPostSuccess }: PostFormProps) => {
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          className="w-full h-28 p-3 bg-slate-800/50 border border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all placeholder:text-slate-500"
+          className="w-full h-28 p-3 bg-slate-800/50 border border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder:text-slate-500"
           placeholder="What's on your mind?..."
           disabled={isLoading}
         />
         <div className="flex items-center gap-4">
-          <input 
-            type="text" 
-            value={labelDisagree} 
-            onChange={(e) => setLabelDisagree(e.target.value)} 
-            className="w-full p-2 text-sm bg-slate-800/50 border border-slate-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:outline-none placeholder:text-slate-500 text-center" 
-            maxLength={30} 
+          <input
+            type="text"
+            value={labelDisagree}
+            onChange={(e) => setLabelDisagree(e.target.value)}
+            className="w-full p-2 text-sm bg-slate-800/50 border border-slate-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:outline-none placeholder:text-slate-500 text-center"
+            maxLength={30}
           />
-          <input 
-            type="text" 
-            value={labelAgree} 
-            onChange={(e) => setLabelAgree(e.target.value)} 
-            className="w-full p-2 text-sm bg-slate-800/50 border border-slate-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none placeholder:text-slate-500 text-center" 
+          <input
+            type="text"
+            value={labelAgree}
+            onChange={(e) => setLabelAgree(e.target.value)}
+            className="w-full p-2 text-sm bg-slate-800/50 border border-slate-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none placeholder:text-slate-500 text-center"
             maxLength={30}
           />
         </div>
         <div className="flex justify-between items-center">
-          <button 
-            type="button" 
-            onClick={() => { /* Logic for template picker can go here */ }}
+          <button
+            type="button"
+            onClick={() => { /* Template picker logic here */ }}
             className="text-xs text-slate-400 border border-slate-700 py-1 px-3 rounded-full hover:bg-slate-800 hover:text-white transition-colors"
           >
             Choose a template...
