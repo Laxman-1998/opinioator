@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import PostForm from '../components/PostForm';
 import PostList from '../components/PostList';
-import SkeletonPost from '../components/SkeletonPost'; // Import our new skeleton
-import { supabase } from '../lib/supabaseClient';
+import SkeletonPost from '../components/SkeletonPost';
 import { useAuth } from '../lib/auth';
 import type { Database } from '../lib/database.types';
+import { fetchAllPosts } from '../lib/posts'; // 👈 We import the corrected function
 type Post = Database['public']['Tables']['posts']['Row'];
 
 export default function FeedPage() {
@@ -15,10 +15,8 @@ export default function FeedPage() {
 
   const getPosts = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from('posts')
-      .select('*')
-      .order('created_at', { ascending: false });
+    // 👇 THE FIX IS HERE: We use the corrected function
+    const data = await fetchAllPosts();
     if (data) {
       setPosts(data);
     }
@@ -44,7 +42,7 @@ export default function FeedPage() {
         </div>
       )}
 
-      {/* New Loading Logic */}
+      {/* Your excellent loading logic is preserved */}
       <div className="w-full flex flex-col gap-4 mt-12 border-t border-slate-800 pt-8">
         {loading ? (
           <>
