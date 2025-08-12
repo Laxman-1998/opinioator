@@ -6,14 +6,22 @@ import { useAuth } from '../lib/auth';
 import { Post } from '../lib/types';
 import PostCard from '../components/PostCard';
 import { motion, AnimatePresence } from 'framer-motion';
-import Link from 'next/link';
 
-// ✅ Dashboard post card (now shows anonymous name)
-const DashboardPostCard = ({ post, onClick, index }: { post: Post; onClick: () => void; index: number }) => {
+// Dashboard post card with comment count
+const DashboardPostCard = ({
+  post,
+  onClick,
+  index,
+}: {
+  post: Post & { comments?: { count: number }[] };
+  onClick: () => void;
+  index: number;
+}) => {
   const agreeCount = post.agree_count ?? 0;
   const disagreeCount = post.disagree_count ?? 0;
   const totalVotes = agreeCount + disagreeCount;
   const sentiment = totalVotes === 0 ? 0.5 : agreeCount / totalVotes;
+  const commentCount = post.comments?.[0]?.count || 0;
 
   return (
     <motion.div
@@ -21,10 +29,18 @@ const DashboardPostCard = ({ post, onClick, index }: { post: Post; onClick: () =
       onClick={onClick}
       initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ type: 'spring', stiffness: 100, damping: 20, delay: index * 0.05 }}
-      whileHover={{ scale: 1.03, borderColor: '#3b82f6', boxShadow: '0 0 20px rgba(59, 130, 246, 0.2)' }}
+      transition={{
+        type: 'spring',
+        stiffness: 100,
+        damping: 20,
+        delay: index * 0.05,
+      }}
+      whileHover={{
+        scale: 1.03,
+        borderColor: '#3b82f6',
+        boxShadow: '0 0 20px rgba(59, 130, 246, 0.2)',
+      }}
     >
-      {/* ✅ Show anonymous_name if available */}
       {post.anonymous_name && (
         <p className="text-slate-400 text-sm italic mb-2">
           {post.anonymous_name}
@@ -33,17 +49,20 @@ const DashboardPostCard = ({ post, onClick, index }: { post: Post; onClick: () =
 
       <p className="text-white font-semibold text-lg mb-4 line-clamp-4">{post.content}</p>
 
-      <div className="flex justify-between items-end mt-auto">
-        <div className="text-xs text-slate-400">
+      <div className="flex justify-between items-end mt-auto text-xs text-slate-400">
+        <div>
           <p>{totalVotes} votes</p>
           <p>{new Date(post.created_at).toLocaleDateString()}</p>
         </div>
-        <p
-          className="text-lg font-bold"
-          style={{ color: `hsl(${sentiment * 120}, 70%, 60%)` }}
-        >
-          {totalVotes > 0 ? `${Math.round(sentiment * 100)}%` : '--%'}
-        </p>
+        <div className="text-right">
+          <p className="mb-1">{commentCount} Comments</p>
+          <p
+            className="text-lg font-bold"
+            style={{ color: `hsl(${sentiment * 120}, 70%, 60%)` }}
+          >
+            {totalVotes > 0 ? `${Math.round(sentiment * 100)}%` : '--%'}
+          </p>
+        </div>
       </div>
     </motion.div>
   );
@@ -72,12 +91,17 @@ export default function DashboardPage() {
     const getMyPosts = async () => {
       if (user) {
         setLoading(true);
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('posts')
-          .select('*')
+          .select('*, comments(count)')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
-        if (data) setPosts(data);
+
+        if (error) {
+          console.error('Error fetching dashboard posts:', error);
+        } else if (data) {
+          setPosts(data);
+        }
         setLoading(false);
       }
     };
@@ -87,7 +111,7 @@ export default function DashboardPage() {
 
   return (
     <div className="relative">
-      {/* New Starfield Background */}
+      {/* Starfield Background */}
       <div className="fixed top-0 left-0 w-full h-full -z-10">
         <div className="stars-container">
           <div className="stars1"></div>

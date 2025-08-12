@@ -8,19 +8,21 @@ import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../lib/auth';
 import type { Database } from '../lib/database.types';
 
-type Post = Database['public']['Tables']['posts']['Row'];
+type PostWithCount = Database['public']['Tables']['posts']['Row'] & {
+  comments?: { count: number }[];
+};
 
 export default function FeedPage() {
   const { user } = useAuth();
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<PostWithCount[]>([]);
   const [loading, setLoading] = useState(true);
 
   const getPosts = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('posts')
-      .select('*')
-      .order('created_at', { ascending: false }); // Newest first
+      .select('*, comments(count)')
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error fetching posts:', error);
