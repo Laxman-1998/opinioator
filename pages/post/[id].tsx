@@ -1,12 +1,14 @@
+// pages/post/[id].tsx
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../lib/auth';
 import { Post, Comment } from '../../lib/types';
 import PostCard from '../../components/PostCard';
 import CommentList from '../../components/CommentList';
 import CommentForm from '../../components/CommentForm';
-import Link from 'next/link';
+import FirstToCommentBanner from '../../components/FirstToCommentBanner';
 
 const PostPage = ({ refreshPosts }: { refreshPosts?: () => void }) => {
   const { user, loading: authLoading } = useAuth();
@@ -15,13 +17,15 @@ const PostPage = ({ refreshPosts }: { refreshPosts?: () => void }) => {
 
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
-  const [commentCount, setCommentCount] = useState(0); // ✅ unified count
+  const [commentCount, setCommentCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
   const [hasCommented, setHasCommented] = useState(false);
 
+  // --- Fetch post + count + whether user is owner / has commented ---
   const fetchPost = async () => {
     if (!id) return;
+
     const { data: postData } = await supabase
       .from('posts')
       .select('*, comments(count)')
@@ -30,6 +34,7 @@ const PostPage = ({ refreshPosts }: { refreshPosts?: () => void }) => {
 
     if (postData) {
       setPost(postData);
+
       const owner = !!(user && postData.user_id === user.id);
       setIsOwner(owner);
 
@@ -48,6 +53,7 @@ const PostPage = ({ refreshPosts }: { refreshPosts?: () => void }) => {
     }
   };
 
+  // --- Fetch comments for private view ---
   const fetchComments = async () => {
     if (!id) return;
     const { data: commentsData } = await supabase
@@ -74,11 +80,12 @@ const PostPage = ({ refreshPosts }: { refreshPosts?: () => void }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, user, authLoading, hasCommented]);
 
+  // --- Handle successful comment creation ---
   const handleCommentSuccess = async () => {
     setHasCommented(true);
-    setCommentCount(prev => prev + 1); // instant UI update
+    setCommentCount((prev) => prev + 1); // instant UI update
     await fetchComments();
-    await fetchPost(); // DB fresh
+    await fetchPost(); // refresh from DB
 
     if (refreshPosts) {
       refreshPosts(); // tell Feed to update counts
@@ -90,51 +97,33 @@ const PostPage = ({ refreshPosts }: { refreshPosts?: () => void }) => {
 
   return (
     <div className="w-full flex flex-col gap-6">
+      {/* Post body */}
       <PostCard post={{ ...post, comments: [{ count: commentCount }] }} />
 
+      {/* Owner or already commented — see the comments */}
       {(isOwner || hasCommented) && (
         <div className="border-t border-slate-800 pt-6">
           <h3 className="text-xl font-bold text-white mb-4">
             Private Comments ({commentCount})
           </h3>
           <CommentList comments={comments} />
-          <CommentForm postId={post.id} onCommentSuccess={handleCommentSuccess} />
+          <CommentForm
+            postId={post.id}
+            onCommentSuccess={handleCommentSuccess}
+          />
         </div>
       )}
 
+      {/* Not owner, logged in, not commented yet — show banner */}
       {!isOwner && user && !hasCommented && (
-        <>
-          {commentCount > 0 ? (
-            <div className="border-t border-indigo-500/60 pt-6 px-6 bg-gradient-to-r from-indigo-900/70 via-indigo-800/70 to-indigo-900/70 rounded-lg shadow-lg animate-fade-in">
-              <div className="flex items-center gap-3 mb-3">
-                <span className="text-blue-400 text-2xl">🔒</span>
-                <h4 className="text-lg font-semibold text-white">
-                  Contribute to see what others have said
-                </h4>
-              </div>
-              <p className="text-slate-300 mb-5">
-                This conversation already has {commentCount} comment{commentCount !== 1 && 's'}.
-                Share your thoughts privately with the author to unlock and read them all.
-              </p>
-              <CommentForm postId={post.id} onCommentSuccess={handleCommentSuccess} />
-            </div>
-          ) : (
-            <div className="border-t border-indigo-500/60 pt-6 px-6 bg-gradient-to-r from-indigo-900/70 via-indigo-800/70 to-indigo-900/70 rounded-lg shadow-lg animate-fade-in">
-              <div className="flex items-center gap-3 mb-3">
-                <span className="text-blue-400 text-2xl">💬</span>
-                <h4 className="text-lg font-semibold text-white">
-                  Be the first to share your thoughts
-                </h4>
-              </div>
-              <p className="text-slate-300 mb-5">
-                This post hasn’t received any comments yet. Your insight could start a private, meaningful conversation with the author.
-              </p>
-              <CommentForm postId={post.id} onCommentSuccess={handleCommentSuccess} />
-            </div>
-          )}
-        </>
+        <FirstToCommentBanner
+          commentCount={commentCount}
+          postId={post.id}
+          onCommentSuccess={handleCommentSuccess}
+        />
       )}
 
+      {/* Not logged in */}
       {!isOwner && !user && (
         <div className="text-center mt-6 pt-6 border-t border-slate-800">
           <p className="text-slate-400">
