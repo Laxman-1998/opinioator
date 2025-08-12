@@ -1,27 +1,20 @@
 // components/PostList.tsx
+
 import PostCard from './PostCard';
-import { Post } from '../lib/types';
+// 1. Import the new Database types
+import type { Database } from '../lib/database.types';
 
-type PostWithCount = Post & {
-  comments?: { count: number }[];
-};
+// 2. Define our Post type using the official 'Row' type from Supabase
+type Post = Database['public']['Tables']['posts']['Row'];
 
-type PostListProps = {
-  posts: PostWithCount[];
-  refreshPosts?: () => void;
-};
-
-export default function PostList({ posts, refreshPosts }: PostListProps) {
+const PostList = ({ posts }: { posts: Post[] }) => {
   return (
-    <div className="space-y-4">
+    <div className="w-full flex flex-col gap-4">
       {posts.map((post) => (
-        <PostCard
-          key={post.id}
-          post={post}
-          isLink
-          refreshPosts={refreshPosts}
-        />
+        <PostCard key={post.id} post={post} />
       ))}
     </div>
   );
-}
+};
+
+export default PostList;
