@@ -6,18 +6,22 @@ type PostWithCount = Post & {
   comments?: { count: number }[];
 };
 
-type Props = {
+type PostListProps = {
   posts: PostWithCount[];
+  refreshPosts?: () => void;
 };
 
-const PostList = ({ posts }: Props) => {
+export default function PostList({ posts, refreshPosts }: PostListProps) {
   return (
     <div className="space-y-4">
       {posts.map((post) => (
-        <PostCard key={post.id} post={post} isLink={true} />
+        <PostCard
+          key={post.id}
+          post={post}
+          isLink={true}
+          refreshPosts={refreshPosts}
+        />
       ))}
     </div>
   );
-};
-
-export default PostList;
+}

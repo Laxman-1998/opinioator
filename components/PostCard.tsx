@@ -1,4 +1,3 @@
-// components/PostCard.tsx
 import { useState, useEffect } from 'react';
 import Slider from 'rc-slider';
 import { Post } from '../lib/types';
@@ -11,9 +10,10 @@ type PostWithCount = Post & {
 type PostCardProps = {
   post: PostWithCount;
   isLink?: boolean;
+  refreshPosts?: () => void; // ✅ added
 };
 
-const PostCard = ({ post, isLink = true }: PostCardProps) => {
+const PostCard = ({ post, isLink = true, refreshPosts }: PostCardProps) => {
   const [currentPost, setCurrentPost] = useState(post);
   const [userVote, setUserVote] = useState<string | null>(null);
   const [sliderValue, setSliderValue] = useState(50);
@@ -55,7 +55,7 @@ const PostCard = ({ post, isLink = true }: PostCardProps) => {
   const totalVotes = agreeCount + disagreeCount;
   const agreePercentage =
     totalVotes === 0 ? 50 : Math.round((agreeCount / totalVotes) * 100);
-  const commentCount = currentPost.comments?.[0]?.count || 0; // ✅ New
+  const commentCount = currentPost.comments?.[0]?.count || 0;
 
   const CardContent = (
     <div
@@ -71,7 +71,7 @@ const PostCard = ({ post, isLink = true }: PostCardProps) => {
 
       <p className="text-slate-200 text-lg">{currentPost.content}</p>
 
-      {/* ✅ Vote + Comment counts */}
+      {/* Vote + Comment counts */}
       <div className="flex justify-between text-xs text-slate-400 mt-2">
         <span>{agreeCount} Agree • {disagreeCount} Disagree</span>
         <span>{commentCount} Comments</span>

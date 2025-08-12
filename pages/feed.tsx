@@ -21,7 +21,7 @@ export default function FeedPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from('posts')
-      .select('*, comments(count)') // ✅ fetch related comments count
+      .select('*, comments(count)') // fetch comment counts
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -64,7 +64,7 @@ export default function FeedPage() {
             <SkeletonPost />
           </>
         ) : posts.length > 0 ? (
-          <PostList posts={posts} />
+          <PostList posts={posts} refreshPosts={getPosts} />
         ) : (
           <div className="text-center p-12">
             <h3 className="text-xl font-bold text-white">The world is quiet... for now.</h3>
