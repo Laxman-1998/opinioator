@@ -20,45 +20,45 @@ const PostPage = () => {
   const [isOwner, setIsOwner] = useState(false);
   const [hasCommented, setHasCommented] = useState(false);
 
-  const fetchPostAndComments = async () => {
+  const fetchPostAndComments = async (force = false) => {
     if (!id) return;
     setLoading(true);
 
-    // Fetch post
+    // Fetch the post
     const { data: postData } = await supabase
       .from('posts')
       .select('*')
-      .eq('id', id)
+      .eq('id', Number(id))
       .single();
 
     if (postData) {
       setPost(postData);
 
-      if (user && postData.user_id === user.id) {
-        setIsOwner(true);
-      }
+      // ✅ always boolean now
+      const owner = !!(user && postData.user_id === user.id);
+      setIsOwner(owner);
 
-      // Check if logged-in user has commented (and is not owner)
-      if (user && postData.user_id !== user.id) {
+      // For non-owner, check if they have commented
+      if (user && !owner) {
         const { data: existing } = await supabase
           .from('comments')
           .select('id')
-          .eq('post_id', id)
+          .eq('post_id', Number(id))
           .eq('user_id', user.id)
           .maybeSingle();
 
         setHasCommented(!!existing);
       }
 
-      // Only fetch all comments if owner or already commented
-      if (user && (postData.user_id === user.id || hasCommented)) {
+      // Fetch comments if owner, has commented, or forced
+      if (force || (user && (owner || hasCommented))) {
         const { data: commentsData } = await supabase
           .from('comments')
           .select('*')
-          .eq('post_id', id)
+          .eq('post_id', Number(id))
           .order('created_at', { ascending: true });
 
-        if (commentsData) setComments(commentsData);
+        setComments(commentsData || []);
       }
     }
 
@@ -79,33 +79,39 @@ const PostPage = () => {
     <div className="w-full flex flex-col gap-6">
       <PostCard post={post} />
 
-      {/* Author */}
+      {/* Post owner view */}
       {isOwner && (
-        <div className="border-t-2 border-dashed border-slate-800 pt-6">
+        <div className="border-t border-slate-800 pt-6">
           <h3 className="text-xl font-bold text-white mb-4">
             Private Comments ({comments.length})
           </h3>
           <CommentList comments={comments} />
-          <CommentForm postId={post.id} onCommentSuccess={fetchPostAndComments} />
+          <CommentForm
+            postId={post.id}
+            onCommentSuccess={() => fetchPostAndComments(true)}
+          />
         </div>
       )}
 
-      {/* Participant (has commented before) */}
+      {/* Participant (already commented) */}
       {!isOwner && hasCommented && (
-        <div className="border-t-2 border-dashed border-slate-800 pt-6">
+        <div className="border-t border-slate-800 pt-6">
           <h3 className="text-xl font-bold text-white mb-4">
             Private Comments ({comments.length})
           </h3>
           <CommentList comments={comments} />
-          <CommentForm postId={post.id} onCommentSuccess={fetchPostAndComments} />
+          <CommentForm
+            postId={post.id}
+            onCommentSuccess={() => fetchPostAndComments(true)}
+          />
         </div>
       )}
 
-      {/* First-time visitor - conditional banners */}
+      {/* First-time visitor */}
       {!isOwner && user && !hasCommented && (
         <>
           {comments.length > 0 ? (
-            <div className="border-t-2 border-dashed border-blue-800 pt-6 px-6 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-lg shadow-lg animate-fade-in">
+            <div className="border-t border-slate-800 pt-6 px-6 bg-slate-900/70 rounded-lg shadow-md animate-fade-in">
               <div className="flex items-center gap-3 mb-3">
                 <span className="text-blue-400 text-2xl">🔒</span>
                 <h4 className="text-lg font-semibold text-white">
@@ -113,20 +119,21 @@ const PostPage = () => {
                 </h4>
               </div>
               <p className="text-slate-400 mb-5">
-                Leave your own private comment for the author. Once you do, you'll unlock and be able to read {comments.length} other {comments.length === 1 ? 'comment' : 'comments'}.
+                Leave your own private comment for the author. Once you do, you'll unlock and be
+                able to read {comments.length} other {comments.length === 1 ? 'comment' : 'comments'}.
               </p>
               <CommentForm
                 postId={post.id}
                 onCommentSuccess={() => {
                   setHasCommented(true);
-                  fetchPostAndComments();
+                  fetchPostAndComments(true);
                 }}
               />
             </div>
           ) : (
-            <div className="border-t-2 border-dashed border-green-800 pt-6 px-6 bg-gradient-to-r from-green-900 via-green-800 to-green-900 rounded-lg shadow-lg animate-fade-in">
+            <div className="border-t border-slate-800 pt-6 px-6 bg-slate-900/70 rounded-lg shadow-md animate-fade-in">
               <div className="flex items-center gap-3 mb-3">
-                <span className="text-green-400 text-2xl">💬</span>
+                <span className="text-blue-400 text-2xl">💬</span>
                 <h4 className="text-lg font-semibold text-white">
                   Be the first to comment
                 </h4>
@@ -138,7 +145,7 @@ const PostPage = () => {
                 postId={post.id}
                 onCommentSuccess={() => {
                   setHasCommented(true);
-                  fetchPostAndComments();
+                  fetchPostAndComments(true);
                 }}
               />
             </div>
@@ -148,7 +155,7 @@ const PostPage = () => {
 
       {/* Not logged in */}
       {!isOwner && !user && (
-        <div className="text-center mt-6 pt-6 border-t-2 border-dashed border-slate-800">
+        <div className="text-center mt-6 pt-6 border-t border-slate-800">
           <p className="text-slate-400">
             <Link href="/login">
               <span className="text-blue-400 hover:underline">Log in</span>
