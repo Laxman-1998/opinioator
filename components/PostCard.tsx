@@ -1,3 +1,4 @@
+// components/PostCard.tsx
 import { useState, useEffect } from 'react';
 import Slider from 'rc-slider';
 import { Post } from '../lib/types';
@@ -10,10 +11,10 @@ type PostWithCount = Post & {
 type PostCardProps = {
   post: PostWithCount;
   isLink?: boolean;
-  refreshPosts?: () => void; // ✅ added
+  refreshPosts?: () => void; // stays here for signature
 };
 
-const PostCard = ({ post, isLink = true, refreshPosts }: PostCardProps) => {
+const PostCard = ({ post, isLink = true }: PostCardProps) => {
   const [currentPost, setCurrentPost] = useState(post);
   const [userVote, setUserVote] = useState<string | null>(null);
   const [sliderValue, setSliderValue] = useState(50);
@@ -128,13 +129,7 @@ const PostCard = ({ post, isLink = true, refreshPosts }: PostCardProps) => {
   );
 
   return isLink ? (
-    <Link
-      href={{
-        pathname: `/post/${post.id}`,
-        query: { fromFeed: true } // optional marker
-      }}
-      as={`/post/${post.id}`}
-    >
+    <Link href={`/post/${post.id}`}>
       {CardContent}
     </Link>
   ) : (

@@ -37,23 +37,19 @@ export default function FeedPage() {
   return (
     <div className="mt-8">
       {user && <PostForm onPostSuccess={getPosts} />}
-
       {!user && (
         <div className="text-center p-8 bg-slate-900/50 rounded-lg border border-slate-800">
           <h3 className="text-xl font-bold text-white">Want to share your thought?</h3>
           <p className="text-slate-400 mt-2">
             <Link href="/login">
               <span className="text-blue-400 hover:underline cursor-pointer">Log in</span>
-            </Link>{' '}
-            or{' '}
+            </Link>{' '}or{' '}
             <Link href="/signup">
               <span className="text-blue-400 hover:underline cursor-pointer">sign up</span>
-            </Link>{' '}
-            to post anonymously.
+            </Link>{' '}to post anonymously.
           </p>
         </div>
       )}
-
       <div className="w-full flex flex-col gap-4 mt-12 border-t border-slate-800 pt-8">
         {loading ? (
           <>

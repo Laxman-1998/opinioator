@@ -18,7 +18,7 @@ export default function PostList({ posts, refreshPosts }: PostListProps) {
         <PostCard
           key={post.id}
           post={post}
-          isLink={true}
+          isLink
           refreshPosts={refreshPosts}
         />
       ))}
