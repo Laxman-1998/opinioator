@@ -22,7 +22,7 @@ const PostPage = ({ refreshPosts }: { refreshPosts?: () => void }) => {
   const [isOwner, setIsOwner] = useState(false);
   const [hasCommented, setHasCommented] = useState(false);
 
-  // --- Fetch post + count + whether user is owner / has commented ---
+  // Fetch post + comment count + ownership / commented status
   const fetchPost = async () => {
     if (!id) return;
 
@@ -53,7 +53,7 @@ const PostPage = ({ refreshPosts }: { refreshPosts?: () => void }) => {
     }
   };
 
-  // --- Fetch comments for private view ---
+  // Fetch all private comments
   const fetchComments = async () => {
     if (!id) return;
     const { data: commentsData } = await supabase
@@ -80,7 +80,7 @@ const PostPage = ({ refreshPosts }: { refreshPosts?: () => void }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, user, authLoading, hasCommented]);
 
-  // --- Handle successful comment creation ---
+  // On successful comment post
   const handleCommentSuccess = async () => {
     setHasCommented(true);
     setCommentCount((prev) => prev + 1); // instant UI update
@@ -88,7 +88,7 @@ const PostPage = ({ refreshPosts }: { refreshPosts?: () => void }) => {
     await fetchPost(); // refresh from DB
 
     if (refreshPosts) {
-      refreshPosts(); // tell Feed to update counts
+      refreshPosts(); // tell feed to update counts
     }
   };
 
@@ -100,7 +100,7 @@ const PostPage = ({ refreshPosts }: { refreshPosts?: () => void }) => {
       {/* Post body */}
       <PostCard post={{ ...post, comments: [{ count: commentCount }] }} />
 
-      {/* Owner or already commented — see the comments */}
+      {/* Owner or already commented — show private comments */}
       {(isOwner || hasCommented) && (
         <div className="border-t border-slate-800 pt-6">
           <h3 className="text-xl font-bold text-white mb-4">
@@ -114,7 +114,7 @@ const PostPage = ({ refreshPosts }: { refreshPosts?: () => void }) => {
         </div>
       )}
 
-      {/* Not owner, logged in, not commented yet — show banner */}
+      {/* Logged in, not owner, not commented yet → show banner */}
       {!isOwner && user && !hasCommented && (
         <FirstToCommentBanner
           commentCount={commentCount}
