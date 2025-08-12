@@ -4,13 +4,15 @@ import Slider from 'rc-slider';
 import { Post } from '../lib/types';
 import Link from 'next/link';
 
-// Our component now accepts an optional 'isLink' property
+type PostWithCount = Post & {
+  comments?: { count: number }[];
+};
+
 type PostCardProps = {
-  post: Post;
+  post: PostWithCount;
   isLink?: boolean;
 };
 
-// We set a default value of true for isLink
 const PostCard = ({ post, isLink = true }: PostCardProps) => {
   const [currentPost, setCurrentPost] = useState(post);
   const [userVote, setUserVote] = useState<string | null>(null);
@@ -53,17 +55,14 @@ const PostCard = ({ post, isLink = true }: PostCardProps) => {
   const totalVotes = agreeCount + disagreeCount;
   const agreePercentage =
     totalVotes === 0 ? 50 : Math.round((agreeCount / totalVotes) * 100);
+  const commentCount = currentPost.comments?.[0]?.count || 0; // ✅ New
 
-  // ========================
-  // Card JSX
-  // ========================
   const CardContent = (
     <div
       className={`bg-slate-900/50 p-5 rounded-lg border border-slate-800 transition-colors ${
         isLink ? 'cursor-pointer hover:border-blue-500' : ''
       }`}
     >
-      {/* ✅ Removed extra ✨ here — anonymous_name already contains it */}
       {currentPost.anonymous_name && (
         <p className="text-slate-400 text-sm italic mb-2">
           {currentPost.anonymous_name}
@@ -71,6 +70,12 @@ const PostCard = ({ post, isLink = true }: PostCardProps) => {
       )}
 
       <p className="text-slate-200 text-lg">{currentPost.content}</p>
+
+      {/* ✅ Vote + Comment counts */}
+      <div className="flex justify-between text-xs text-slate-400 mt-2">
+        <span>{agreeCount} Agree • {disagreeCount} Disagree</span>
+        <span>{commentCount} Comments</span>
+      </div>
 
       <div className="mt-6 pt-4 border-t border-slate-800">
         {userVote ? (
