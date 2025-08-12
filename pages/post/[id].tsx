@@ -1,3 +1,4 @@
+// pages/post/[id].tsx
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
@@ -12,26 +13,66 @@ const PostPage = () => {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const { id } = router.query;
+
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
-  const [commentSubmitted, setCommentSubmitted] = useState(false); // State for non-owner success message
+  const [hasCommented, setHasCommented] = useState(false); // ✅ NEW
 
   const fetchPostAndComments = async () => {
     if (!id) return;
 
     setLoading(true);
-    const { data: postData } = await supabase.from('posts').select('*').eq('id', id).single();
-    
+
+    // Fetch the post
+    const { data: postData } = await supabase
+      .from('posts')
+      .select('*')
+      .eq('id', id)
+      .single();
+
     if (postData) {
       setPost(postData);
+
+      // ✅ Determine ownership up front
       if (user && postData.user_id === user.id) {
         setIsOwner(true);
-        const { data: commentsData } = await supabase.from('comments').select('*').eq('post_id', id).order('created_at');
+      }
+
+      // ✅ Check if logged-in user has commented before (and is not the owner)
+      if (user && postData.user_id !== user.id) {
+        const { data: existing } = await supabase
+          .from('comments')
+          .select('id')
+          .eq('post_id', id)
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        setHasCommented(!!existing);
+      }
+
+      // ✅ Only fetch all comments if owner or has already commented
+      if (user && (postData.user_id === user.id)) {
+        const { data: commentsData } = await supabase
+          .from('comments')
+          .select('*')
+          .eq('post_id', id)
+          .order('created_at', { ascending: true });
+
+        if (commentsData) setComments(commentsData);
+      } 
+      else if (user && hasCommented) {
+        const { data: commentsData } = await supabase
+          .from('comments')
+          .select('*')
+          .eq('post_id', id)
+          .order('created_at', { ascending: true });
+
         if (commentsData) setComments(commentsData);
       }
     }
+
     setLoading(false);
   };
 
@@ -39,6 +80,7 @@ const PostPage = () => {
     if (!authLoading) {
       fetchPostAndComments();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, user, authLoading]);
 
   if (loading) return <p className="text-center">Loading post...</p>;
@@ -47,34 +89,53 @@ const PostPage = () => {
   return (
     <div className="w-full flex flex-col gap-6">
       <PostCard post={post} />
-      
-      {isOwner ? (
-        // If you are the owner, show the private comments section
+
+      {/* ✅ SHOW for Author */}
+      {isOwner && (
         <div className="border-t-2 border-dashed border-slate-800 pt-6">
-          <h3 className="text-xl font-bold text-white mb-4">Private Comments ({comments.length})</h3>
+          <h3 className="text-xl font-bold text-white mb-4">
+            Private Comments ({comments.length})
+          </h3>
           <CommentList comments={comments} />
           <CommentForm postId={post.id} onCommentSuccess={fetchPostAndComments} />
         </div>
-      ) : user ? (
-        // If you are logged in but NOT the owner
+      )}
+
+      {/* ✅ SHOW for Participant (has commented) */}
+      {!isOwner && hasCommented && (
         <div className="border-t-2 border-dashed border-slate-800 pt-6">
-          {commentSubmitted ? (
-            <div className="text-center p-8 bg-green-900/50 rounded-lg border border-green-700">
-              <p>Your private comment has been sent to the author.</p>
-            </div>
-          ) : (
-            <>
-              <h3 className="text-xl font-bold text-white mb-4">Leave a Private Comment</h3>
-              <CommentForm postId={post.id} onCommentSuccess={() => setCommentSubmitted(true)} />
-            </>
-          )}
+          <h3 className="text-xl font-bold text-white mb-4">
+            Private Comments ({comments.length})
+          </h3>
+          <CommentList comments={comments} />
+          <CommentForm postId={post.id} onCommentSuccess={fetchPostAndComments} />
         </div>
-      ) : (
-         // If not logged in, show a prompt
+      )}
+
+      {/* ✅ SHOW for First-time visitor */}
+      {!isOwner && user && !hasCommented && (
+        <div className="border-t-2 border-dashed border-slate-800 pt-6 p-6 bg-slate-900/50 rounded-lg">
+          <p className="mb-4 text-slate-400">
+            Contribute a comment to see what others have said.
+          </p>
+          <CommentForm
+            postId={post.id}
+            onCommentSuccess={() => {
+              setHasCommented(true);
+              fetchPostAndComments();
+            }}
+          />
+        </div>
+      )}
+
+      {/* Not logged in */}
+      {!isOwner && !user && (
         <div className="text-center mt-6 pt-6 border-t-2 border-dashed border-slate-800">
           <p className="text-slate-400">
-            <Link href="/login"><span className="text-blue-400 hover:underline">Log in</span></Link>
-            {' '}to leave a private comment.
+            <Link href="/login">
+              <span className="text-blue-400 hover:underline">Log in</span>
+            </Link>{' '}
+            to leave a private comment.
           </p>
         </div>
       )}
