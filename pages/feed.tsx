@@ -21,7 +21,7 @@ export default function FeedPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from('posts')
-      .select('*, comments(count)')
+      .select('*, comments(count)') // ✅ fetch related comments count
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -56,7 +56,6 @@ export default function FeedPage() {
         </div>
       )}
 
-      {/* Posts Section */}
       <div className="w-full flex flex-col gap-4 mt-12 border-t border-slate-800 pt-8">
         {loading ? (
           <>
