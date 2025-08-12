@@ -1,4 +1,3 @@
-// pages/post/[id].tsx
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
@@ -9,7 +8,7 @@ import CommentList from '../../components/CommentList';
 import CommentForm from '../../components/CommentForm';
 import Link from 'next/link';
 
-const PostPage = () => {
+const PostPage = ({ refreshPosts }: { refreshPosts?: () => void }) => {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const { id } = router.query;
@@ -23,12 +22,9 @@ const PostPage = () => {
 
   const fetchPost = async () => {
     if (!id) return;
-
     const { data: postData } = await supabase
       .from('posts')
-      .select(
-        '*, comments(count)' // fetch count directly
-      )
+      .select('*, comments(count)')
       .eq('id', Number(id))
       .single();
 
@@ -37,11 +33,9 @@ const PostPage = () => {
       const owner = !!(user && postData.user_id === user.id);
       setIsOwner(owner);
 
-      // extract comments count from relation
       const count = postData.comments?.[0]?.count || 0;
       setCommentCount(count);
 
-      // check if current user has commented (if not owner)
       if (user && !owner) {
         const { data: existing } = await supabase
           .from('comments')
@@ -67,7 +61,6 @@ const PostPage = () => {
   const initLoad = async () => {
     setLoading(true);
     await fetchPost();
-    // load full comments only if allowed
     if (user && (isOwner || hasCommented)) {
       await fetchComments();
     }
@@ -83,8 +76,13 @@ const PostPage = () => {
 
   const handleCommentSuccess = async () => {
     setHasCommented(true);
+    setCommentCount(prev => prev + 1); // instant UI update
     await fetchComments();
-    await fetchPost(); // updates count
+    await fetchPost(); // DB fresh
+
+    if (refreshPosts) {
+      refreshPosts(); // tell Feed to update counts
+    }
   };
 
   if (loading) return <p className="text-center">Loading post...</p>;
@@ -94,21 +92,16 @@ const PostPage = () => {
     <div className="w-full flex flex-col gap-6">
       <PostCard post={{ ...post, comments: [{ count: commentCount }] }} />
 
-      {/* Owner / Already commented */}
       {(isOwner || hasCommented) && (
         <div className="border-t border-slate-800 pt-6">
           <h3 className="text-xl font-bold text-white mb-4">
             Private Comments ({commentCount})
           </h3>
           <CommentList comments={comments} />
-          <CommentForm
-            postId={post.id}
-            onCommentSuccess={handleCommentSuccess}
-          />
+          <CommentForm postId={post.id} onCommentSuccess={handleCommentSuccess} />
         </div>
       )}
 
-      {/* First-time visitor */}
       {!isOwner && user && !hasCommented && (
         <>
           {commentCount > 0 ? (
@@ -123,10 +116,7 @@ const PostPage = () => {
                 This conversation already has {commentCount} comment{commentCount !== 1 && 's'}.
                 Share your thoughts privately with the author to unlock and read them all.
               </p>
-              <CommentForm
-                postId={post.id}
-                onCommentSuccess={handleCommentSuccess}
-              />
+              <CommentForm postId={post.id} onCommentSuccess={handleCommentSuccess} />
             </div>
           ) : (
             <div className="border-t border-indigo-500/60 pt-6 px-6 bg-gradient-to-r from-indigo-900/70 via-indigo-800/70 to-indigo-900/70 rounded-lg shadow-lg animate-fade-in">
@@ -139,16 +129,12 @@ const PostPage = () => {
               <p className="text-slate-300 mb-5">
                 This post hasn’t received any comments yet. Your insight could start a private, meaningful conversation with the author.
               </p>
-              <CommentForm
-                postId={post.id}
-                onCommentSuccess={handleCommentSuccess}
-              />
+              <CommentForm postId={post.id} onCommentSuccess={handleCommentSuccess} />
             </div>
           )}
         </>
       )}
 
-      {/* Not logged in */}
       {!isOwner && !user && (
         <div className="text-center mt-6 pt-6 border-t border-slate-800">
           <p className="text-slate-400">

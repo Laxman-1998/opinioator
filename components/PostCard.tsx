@@ -128,7 +128,13 @@ const PostCard = ({ post, isLink = true, refreshPosts }: PostCardProps) => {
   );
 
   return isLink ? (
-    <Link href={`/post/${post.id}`} key={post.id}>
+    <Link
+      href={{
+        pathname: `/post/${post.id}`,
+        query: { fromFeed: true } // optional marker
+      }}
+      as={`/post/${post.id}`}
+    >
       {CardContent}
     </Link>
   ) : (

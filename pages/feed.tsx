@@ -21,12 +21,10 @@ export default function FeedPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from('posts')
-      .select('*, comments(count)') // fetch comment counts
+      .select('*, comments(count)')
       .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching posts:', error);
-    } else if (data) {
+    if (!error && data) {
       setPosts(data);
     }
     setLoading(false);
