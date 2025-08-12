@@ -18,14 +18,13 @@ const PostPage = () => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
-  const [hasCommented, setHasCommented] = useState(false); // ✅ NEW
+  const [hasCommented, setHasCommented] = useState(false);
 
   const fetchPostAndComments = async () => {
     if (!id) return;
-
     setLoading(true);
 
-    // Fetch the post
+    // Fetch post
     const { data: postData } = await supabase
       .from('posts')
       .select('*')
@@ -35,12 +34,11 @@ const PostPage = () => {
     if (postData) {
       setPost(postData);
 
-      // ✅ Determine ownership up front
       if (user && postData.user_id === user.id) {
         setIsOwner(true);
       }
 
-      // ✅ Check if logged-in user has commented before (and is not the owner)
+      // Check if logged-in user has commented (and is not owner)
       if (user && postData.user_id !== user.id) {
         const { data: existing } = await supabase
           .from('comments')
@@ -52,17 +50,8 @@ const PostPage = () => {
         setHasCommented(!!existing);
       }
 
-      // ✅ Only fetch all comments if owner or has already commented
-      if (user && (postData.user_id === user.id)) {
-        const { data: commentsData } = await supabase
-          .from('comments')
-          .select('*')
-          .eq('post_id', id)
-          .order('created_at', { ascending: true });
-
-        if (commentsData) setComments(commentsData);
-      } 
-      else if (user && hasCommented) {
+      // Only fetch all comments if owner or already commented
+      if (user && (postData.user_id === user.id || hasCommented)) {
         const { data: commentsData } = await supabase
           .from('comments')
           .select('*')
@@ -81,7 +70,7 @@ const PostPage = () => {
       fetchPostAndComments();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, user, authLoading]);
+  }, [id, user, authLoading, hasCommented]);
 
   if (loading) return <p className="text-center">Loading post...</p>;
   if (!post) return <p className="text-center">Post not found.</p>;
@@ -90,7 +79,7 @@ const PostPage = () => {
     <div className="w-full flex flex-col gap-6">
       <PostCard post={post} />
 
-      {/* ✅ SHOW for Author */}
+      {/* Author */}
       {isOwner && (
         <div className="border-t-2 border-dashed border-slate-800 pt-6">
           <h3 className="text-xl font-bold text-white mb-4">
@@ -101,7 +90,7 @@ const PostPage = () => {
         </div>
       )}
 
-      {/* ✅ SHOW for Participant (has commented) */}
+      {/* Participant (has commented before) */}
       {!isOwner && hasCommented && (
         <div className="border-t-2 border-dashed border-slate-800 pt-6">
           <h3 className="text-xl font-bold text-white mb-4">
@@ -112,20 +101,49 @@ const PostPage = () => {
         </div>
       )}
 
-      {/* ✅ SHOW for First-time visitor */}
+      {/* First-time visitor - conditional banners */}
       {!isOwner && user && !hasCommented && (
-        <div className="border-t-2 border-dashed border-slate-800 pt-6 p-6 bg-slate-900/50 rounded-lg">
-          <p className="mb-4 text-slate-400">
-            Contribute a comment to see what others have said.
-          </p>
-          <CommentForm
-            postId={post.id}
-            onCommentSuccess={() => {
-              setHasCommented(true);
-              fetchPostAndComments();
-            }}
-          />
-        </div>
+        <>
+          {comments.length > 0 ? (
+            <div className="border-t-2 border-dashed border-blue-800 pt-6 px-6 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-lg shadow-lg animate-fade-in">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-blue-400 text-2xl">🔒</span>
+                <h4 className="text-lg font-semibold text-white">
+                  Contribute to see what others have said
+                </h4>
+              </div>
+              <p className="text-slate-400 mb-5">
+                Leave your own private comment for the author. Once you do, you'll unlock and be able to read {comments.length} other {comments.length === 1 ? 'comment' : 'comments'}.
+              </p>
+              <CommentForm
+                postId={post.id}
+                onCommentSuccess={() => {
+                  setHasCommented(true);
+                  fetchPostAndComments();
+                }}
+              />
+            </div>
+          ) : (
+            <div className="border-t-2 border-dashed border-green-800 pt-6 px-6 bg-gradient-to-r from-green-900 via-green-800 to-green-900 rounded-lg shadow-lg animate-fade-in">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-green-400 text-2xl">💬</span>
+                <h4 className="text-lg font-semibold text-white">
+                  Be the first to comment
+                </h4>
+              </div>
+              <p className="text-slate-400 mb-5">
+                This post doesn’t have any comments yet. Share your thoughts privately with the author.
+              </p>
+              <CommentForm
+                postId={post.id}
+                onCommentSuccess={() => {
+                  setHasCommented(true);
+                  fetchPostAndComments();
+                }}
+              />
+            </div>
+          )}
+        </>
       )}
 
       {/* Not logged in */}
