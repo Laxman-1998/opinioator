@@ -38,44 +38,24 @@ const PostPage = () => {
       return;
     }
 
-    let userHasCommented = false;
-    let commentsData: Comment[] = [];
+    // Fetch all comments for this post
+    const { data: allComments } = await supabase
+      .from('comments')
+      .select('id, created_at, content, anonymous_name, post_id, user_id')
+      .eq('post_id', id)
+      .order('created_at');
+    setComments(allComments || []);
 
     if (owner) {
-      // Owner sees all comments
-      const { data } = await supabase
-        .from('comments')
-        .select('id, created_at, content, anonymous_name, post_id, user_id')
-        .eq('post_id', id)
-        .order('created_at');
-      commentsData = data || [];
-      setComments(commentsData);
-      setHasCommented(true); // owner always considered having access to comments
+      setHasCommented(true); // Owner always can see comments
     } else if (user) {
-      // Check if user has commented
-      const { data: existing } = await supabase
-        .from('comments')
-        .select('id')
-        .eq('post_id', id)
-        .eq('user_id', user.id)
-        .maybeSingle();
-      userHasCommented = !!existing;
-      setHasCommented(userHasCommented);
-
-      if (userHasCommented) {
-        const { data } = await supabase
-          .from('comments')
-          .select('id, created_at, content, anonymous_name, post_id, user_id')
-          .eq('post_id', id)
-          .order('created_at');
-        commentsData = data || [];
-        setComments(commentsData);
-      } else {
-        setComments([]); // no comments until user comments
-      }
+      // Check if user has commented on this post
+      const didComment = (allComments || []).some(
+        (comment) => comment.user_id === user.id
+      );
+      setHasCommented(didComment);
     } else {
-      setComments([]); // not logged in, no comments
-      setHasCommented(false);
+      setHasCommented(false); // Not logged in
     }
 
     setLoading(false);
@@ -86,7 +66,7 @@ const PostPage = () => {
       fetchPostAndComments();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, user, authLoading, hasCommented]); // will refetch if hasCommented changes
+  }, [id, user, authLoading, hasCommented]); // refetch on hasCommented changes
 
   // Banner for zero comments
   const zeroCommentBanner = (
@@ -120,7 +100,6 @@ const PostPage = () => {
   return (
     <div className="w-full flex flex-col gap-6">
       <PostCard post={post} />
-
       {/* AUTHOR VIEW: always show comments */}
       {isOwner ? (
         <div className="border-t-2 border-dashed border-slate-800 pt-6">
