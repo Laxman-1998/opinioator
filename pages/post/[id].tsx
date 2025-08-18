@@ -43,7 +43,7 @@ const PostPage = () => {
     const { data: allComments } = await supabase
       .from('comments')
       .select('id, created_at, content, anonymous_name, post_id, user_id')
-      .eq('post_id', id)
+      .eq('post_id', Number(id))
       .order('created_at');
     setComments(allComments || []);
     console.log('All comment user IDs:', (allComments || []).map(c => c.user_id));
