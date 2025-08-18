@@ -1,4 +1,3 @@
-// pages/post/[id].tsx
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
@@ -24,11 +23,6 @@ const PostPage = () => {
   const fetchPostAndComments = async () => {
     if (!id) return;
 
-    console.log('Router query id:', id);
-    console.log('Type of id:', typeof id);
-    console.log('fetchPostAndComments called');
-    console.log('Current user ID:', user?.id);
-
     setLoading(true);
 
     const postIdNum = Number(id);
@@ -50,8 +44,6 @@ const PostPage = () => {
       .order('created_at');
 
     setComments(allComments || []);
-    console.log('All comment user IDs:', (allComments || []).map(c => c.user_id));
-    console.log('Raw allComments:', allComments);
 
     if (owner) {
       setHasCommented(true);
@@ -60,7 +52,6 @@ const PostPage = () => {
         (comment) => comment.user_id === user.id
       );
       setHasCommented(didComment);
-      console.log('hasCommented:', didComment);
     } else {
       setHasCommented(false);
     }
@@ -75,33 +66,76 @@ const PostPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, user, authLoading, refreshCount]);
 
-  if (loading) return <p className="text-center">Loading post...</p>;
+  if (loading)
+    return (
+      <div className="text-center py-10">
+        <svg
+          className="animate-spin h-8 w-8 text-blue-500 mx-auto"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          aria-label="Loading spinner"
+          role="img"
+        >
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          ></circle>
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+          ></path>
+        </svg>
+        <p className="mt-2 text-gray-600">Loading post...</p>
+      </div>
+    );
+
   if (!post) return <p className="text-center">Post not found.</p>;
 
   return (
     <div className="w-full flex flex-col gap-6">
-      <PostCard post={post} />
+      <PostCard post={post} commentCount={comments.length} />
 
       {isOwner ? (
         <div className="border-t-2 border-dashed border-slate-800 pt-6">
-          <h3 className="text-xl font-bold text-white mb-4">Private Comments ({comments.length})</h3>
+          <h3 className="text-xl font-bold text-white mb-4">
+            Private Comments ({comments.length})
+          </h3>
           <CommentList comments={comments} />
-          <CommentForm postId={post.id} onCommentSuccess={() => setRefreshCount((c) => c + 1)} />
+          <CommentForm
+            postId={post.id}
+            onCommentSuccess={() => setRefreshCount((c) => c + 1)}
+          />
         </div>
       ) : user ? (
         <div className="border-t-2 border-dashed border-slate-800 pt-6">
           {hasCommented ? (
             <>
-              <h3 className="text-xl font-bold text-white mb-4">Private Comments ({comments.length})</h3>
+              <h3 className="text-xl font-bold text-white mb-4">
+                Private Comments ({comments.length})
+              </h3>
               <CommentList comments={comments} />
-              <CommentForm postId={post.id} onCommentSuccess={() => setRefreshCount((c) => c + 1)} />
+              <CommentForm
+                postId={post.id}
+                onCommentSuccess={() => setRefreshCount((c) => c + 1)}
+              />
             </>
           ) : (
             <>
-              <p className="italic text-slate-400 mb-4">
-                No private comments yet. Be the first to share your perspective.
+              <p className="italic text-slate-400 mb-4 transition-opacity duration-500">
+                {comments.length === 0
+                  ? 'No private comments yet. Be the first to share your perspective.'
+                  : 'Add your own private comment to view others.'}
               </p>
-              <CommentForm postId={post.id} onCommentSuccess={() => setRefreshCount((c) => c + 1)} />
+              <CommentForm
+                postId={post.id}
+                onCommentSuccess={() => setRefreshCount((c) => c + 1)}
+              />
             </>
           )}
         </div>

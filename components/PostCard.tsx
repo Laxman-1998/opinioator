@@ -4,14 +4,15 @@ import Slider from 'rc-slider';
 import { Post } from '../lib/types';
 import Link from 'next/link';
 
-// Our component now accepts an optional 'isLink' property
+// Our component now accepts an optional 'isLink' property and optional 'commentCount' property
 type PostCardProps = {
   post: Post;
   isLink?: boolean;
+  commentCount?: number; // Added commentCount prop
 };
 
 // We set a default value of true for isLink
-const PostCard = ({ post, isLink = true }: PostCardProps) => {
+const PostCard = ({ post, isLink = true, commentCount }: PostCardProps) => {
   const [currentPost, setCurrentPost] = useState(post);
   const [userVote, setUserVote] = useState<string | null>(null);
   const [sliderValue, setSliderValue] = useState(50);
@@ -25,16 +26,13 @@ const PostCard = ({ post, isLink = true }: PostCardProps) => {
 
   const handleVote = async (voteType: 'agree' | 'disagree') => {
     if (userVote) return;
-
     localStorage.setItem(`voted_on_post_${post.id}`, voteType);
     setUserVote(voteType);
-
     setCurrentPost(prevPost => ({
       ...prevPost,
       agree_count: (prevPost.agree_count ?? 0) + (voteType === 'agree' ? 1 : 0),
       disagree_count: (prevPost.disagree_count ?? 0) + (voteType === 'disagree' ? 1 : 0),
     }));
-
     await fetch('/api/vote', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -54,9 +52,9 @@ const PostCard = ({ post, isLink = true }: PostCardProps) => {
   const agreePercentage =
     totalVotes === 0 ? 50 : Math.round((agreeCount / totalVotes) * 100);
 
-  // ========================
+  // ========
   // Card JSX
-  // ========================
+  // ========
   const CardContent = (
     <div
       className={`bg-slate-900/50 p-5 rounded-lg border border-slate-800 transition-colors ${
@@ -69,8 +67,15 @@ const PostCard = ({ post, isLink = true }: PostCardProps) => {
           {currentPost.anonymous_name}
         </p>
       )}
-
       <p className="text-slate-200 text-lg">{currentPost.content}</p>
+
+      {typeof commentCount === 'number' && (
+        <div className="mt-2 text-sm text-slate-400 italic transition-opacity duration-500">
+          {commentCount === 0
+            ? 'Be the first to add a private comment.'
+            : `Private Comments (${commentCount}) — To view, add your own comment first.`}
+        </div>
+      )}
 
       <div className="mt-6 pt-4 border-t border-slate-800">
         {userVote ? (
