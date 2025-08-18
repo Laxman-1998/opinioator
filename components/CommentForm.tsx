@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { supabase } from '../lib/supabaseClient'; // We need this to get the user's session
+import { supabase } from '../lib/supabaseClient';
 
 type CommentFormProps = {
   postId: number;
@@ -17,36 +17,35 @@ const CommentForm = ({ postId, onCommentSuccess }: CommentFormProps) => {
     setIsLoading(true);
 
     try {
-      // --- NEW, CRUCIAL PART ---
-      // 1. Get the current user's session, which contains the access token (the "passport").
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session) {
         throw new Error("You must be logged in to comment.");
       }
 
-      // 2. Make the API call, but now we manually add the Authorization header.
-      const response = await fetch('/api/comment', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          // This is the "passport" that proves who we are to the backend API.
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ content, post_id: postId }),
-      });
-      // --- END OF NEW PART ---
+      // Insert comment directly into Supabase (bypassing API)
+      const generatedName = generateAnonymousName(); // Use your logic or replace with fixed string
 
-      if (!response.ok) {
-        // We can get more details from the response if it fails
-        const errorBody = await response.json();
-        throw new Error(errorBody.error || 'Failed to post comment');
+      const { error } = await supabase
+        .from('comments')
+        .insert([
+          {
+            content,
+            post_id: Number(postId),
+            user_id: session.user.id,
+            anonymous_name: generatedName,
+          },
+        ]);
+
+      if (error) {
+        throw error;
       }
-      
+
       toast.success('Comment posted!');
       setContent('');
       console.log('Comment submitted, calling onCommentSuccess');
       onCommentSuccess();
+
     } catch (error) {
       console.error(error);
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
@@ -54,6 +53,16 @@ const CommentForm = ({ postId, onCommentSuccess }: CommentFormProps) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Simple anonymous name generator (replace with your own logic)
+  const generateAnonymousName = () => {
+    const adjectives = ['Galactic', 'Radiant', 'Nebulous', 'Stellar', 'Cosmic', 'Lunar', 'Solar'];
+    const nouns = ['Photon', 'Cluster', 'Nebula', 'Comet', 'Meteor', 'Quasar', 'Pulsar'];
+    const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+    const noun = nouns[Math.floor(Math.random() * nouns.length)];
+    const number = Math.floor(Math.random() * 100);
+    return `${adjective}_${noun}_${number}`;
   };
 
   return (

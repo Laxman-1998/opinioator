@@ -22,6 +22,7 @@ const PostPage = () => {
 
   const fetchPostAndComments = async () => {
     if (!id) return;
+
     console.log('Router query id:', id);
     console.log('Type of id:', typeof id);
     console.log('fetchPostAndComments called');
@@ -29,7 +30,9 @@ const PostPage = () => {
 
     setLoading(true);
 
-    const { data: postData } = await supabase.from('posts').select('*').eq('id', id).single();
+    const postIdNum = Number(id);
+
+    const { data: postData } = await supabase.from('posts').select('*').eq('id', postIdNum).single();
     setPost(postData);
 
     const owner = user && postData && postData.user_id === user.id;
@@ -43,10 +46,11 @@ const PostPage = () => {
     const { data: allComments } = await supabase
       .from('comments')
       .select('id, created_at, content, anonymous_name, post_id, user_id')
-      .eq('post_id', Number(id))
+      .eq('post_id', postIdNum)
       .order('created_at');
     setComments(allComments || []);
     console.log('All comment user IDs:', (allComments || []).map(c => c.user_id));
+    console.log('Raw allComments:', allComments);
 
     if (owner) {
       setHasCommented(true);
@@ -59,7 +63,6 @@ const PostPage = () => {
     } else {
       setHasCommented(false);
     }
-
     setLoading(false);
   };
 
