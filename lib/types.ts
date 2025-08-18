@@ -17,4 +17,5 @@ export type Comment = {
   content: string;
   post_id: number;
   user_id: string;
+  anonymous_name?: string;  // <-- Added this line as optional
 };
