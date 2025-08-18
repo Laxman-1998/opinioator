@@ -60,6 +60,8 @@ const CommentForm = ({ postId, onCommentSuccess }: CommentFormProps) => {
     <form onSubmit={handleSubmit} className="w-full mt-4">
       <div className="flex flex-col gap-2">
         <textarea
+          id="comment-content"
+          name="comment-content"
           value={content}
           onChange={(e) => setContent(e.target.value)}
           className="w-full h-20 p-3 bg-slate-800/50 border border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
