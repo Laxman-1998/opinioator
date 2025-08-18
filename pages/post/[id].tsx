@@ -9,10 +9,6 @@ import CommentList from '../../components/CommentList';
 import CommentForm from '../../components/CommentForm';
 import Link from 'next/link';
 
-console.log('fetchPostAndComments called');
-console.log('f3162f90-272d-4320-94d8-953935dd04d0:');
-
-
 const PostPage = () => {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -24,16 +20,16 @@ const PostPage = () => {
   const [isOwner, setIsOwner] = useState(false);
   const [hasCommented, setHasCommented] = useState(false);
 
-  // Fetch post & comments (conditional) and update states
   const fetchPostAndComments = async () => {
     if (!id) return;
+    console.log('fetchPostAndComments called');
+    console.log('Current user ID:', user?.id);
+
     setLoading(true);
 
-    // Fetch post
     const { data: postData } = await supabase.from('posts').select('*').eq('id', id).single();
     setPost(postData);
 
-    // Determine owner status
     const owner = user && postData && postData.user_id === user.id;
     setIsOwner(!!owner);
 
@@ -42,24 +38,24 @@ const PostPage = () => {
       return;
     }
 
-    // Fetch all comments for this post
     const { data: allComments } = await supabase
       .from('comments')
       .select('id, created_at, content, anonymous_name, post_id, user_id')
       .eq('post_id', id)
       .order('created_at');
     setComments(allComments || []);
+    console.log('All comment user IDs:', (allComments || []).map(c => c.user_id));
 
     if (owner) {
-      setHasCommented(true); // Owner always can see comments
+      setHasCommented(true);
     } else if (user) {
-      // Check if user has commented on this post
       const didComment = (allComments || []).some(
         (comment) => comment.user_id === user.id
       );
       setHasCommented(didComment);
+      console.log('hasCommented:', didComment);
     } else {
-      setHasCommented(false); // Not logged in
+      setHasCommented(false);
     }
 
     setLoading(false);
@@ -70,33 +66,7 @@ const PostPage = () => {
       fetchPostAndComments();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, user, authLoading, hasCommented]); // refetch on hasCommented changes
-
-  // Banner for zero comments
-  const zeroCommentBanner = (
-    <div className="p-5 mb-4 rounded-lg bg-gradient-to-r from-indigo-900 via-slate-900 to-fuchsia-900 shadow-lg border border-indigo-400 text-center">
-      <h2
-        className="text-2xl font-extrabold text-indigo-200 mb-2"
-        style={{ fontFamily: 'Orbitron, sans-serif', letterSpacing: '0.07em' }}
-      >
-        🌌 Be the First to Start a Private Space Conversation
-      </h2>
-      <p className="text-indigo-100">No one has commented privately yet. Start the cosmic conversation!</p>
-    </div>
-  );
-
-  // Banner when comments exist but user hasn't contributed yet
-  const contributeBanner = (
-    <div className="p-5 mb-4 rounded-lg bg-gradient-to-r from-fuchsia-800 via-indigo-800 to-indigo-900 shadow-lg border border-indigo-400 text-center">
-      <h2
-        className="text-xl font-bold text-fuchsia-200 mb-2"
-        style={{ fontFamily: 'Orbitron, sans-serif' }}
-      >
-        🚀 Contribute to Unlock {comments.length} Private Comments
-      </h2>
-      <p className="text-indigo-100">Share your insight privately to reveal what others have said to the author.</p>
-    </div>
-  );
+  }, [id, user, authLoading, hasCommented]);
 
   if (loading) return <p className="text-center">Loading post...</p>;
   if (!post) return <p className="text-center">Post not found.</p>;
@@ -104,7 +74,7 @@ const PostPage = () => {
   return (
     <div className="w-full flex flex-col gap-6">
       <PostCard post={post} />
-      {/* AUTHOR VIEW: always show comments */}
+
       {isOwner ? (
         <div className="border-t-2 border-dashed border-slate-800 pt-6">
           <h3 className="text-xl font-bold text-white mb-4">Private Comments ({comments.length})</h3>
@@ -112,7 +82,6 @@ const PostPage = () => {
           <CommentForm postId={post.id} onCommentSuccess={fetchPostAndComments} />
         </div>
       ) : user ? (
-        // Non-owner logged-in user
         <div className="border-t-2 border-dashed border-slate-800 pt-6">
           {hasCommented ? (
             <>
@@ -122,14 +91,15 @@ const PostPage = () => {
             </>
           ) : (
             <>
-              {/* Show correct banner */}
-              {comments.length === 0 ? zeroCommentBanner : contributeBanner}
+              {/* Simple note instead of banners */}
+              <p className="italic text-slate-400 mb-4">
+                No private comments yet. Be the first to share your perspective.
+              </p>
               <CommentForm postId={post.id} onCommentSuccess={fetchPostAndComments} />
             </>
           )}
         </div>
       ) : (
-        // Not logged in
         <div className="text-center mt-6 pt-6 border-t-2 border-dashed border-slate-800">
           <p className="text-slate-400">
             <Link href="/login">
