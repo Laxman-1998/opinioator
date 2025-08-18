@@ -71,7 +71,7 @@ const PostPage = () => {
       fetchPostAndComments();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, user, authLoading, hasCommented]);
+  }, [id, user, authLoading]);
 
   if (loading) return <p className="text-center">Loading post...</p>;
   if (!post) return <p className="text-center">Post not found.</p>;
