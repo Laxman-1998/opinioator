@@ -1,3 +1,4 @@
+// pages/post/[id].tsx
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
@@ -27,6 +28,7 @@ const PostPage = () => {
 
     const postIdNum = Number(id);
     const { data: postData } = await supabase.from('posts').select('*').eq('id', postIdNum).single();
+
     setPost(postData);
 
     const owner = user && postData && postData.user_id === user.id;
@@ -127,11 +129,15 @@ const PostPage = () => {
             </>
           ) : (
             <>
-              <p className="italic text-slate-400 mb-4 transition-opacity duration-500">
-                {comments.length === 0
-                  ? 'No private comments yet. Be the first to share your perspective.'
-                  : 'Add your own private comment to view others.'}
-              </p>
+              {comments.length === 0 ? (
+                <p className="p-4 rounded-lg bg-gradient-to-r from-indigo-900 via-slate-900 to-fuchsia-900 shadow-lg border border-indigo-400 text-center italic text-indigo-200 font-semibold mb-4">
+                  ✨ Be the first to add a private comment!
+                </p>
+              ) : (
+                <p className="p-4 rounded-lg bg-gradient-to-r from-indigo-900 via-slate-900 to-fuchsia-900 shadow-lg border border-indigo-400 text-center italic text-indigo-200 font-semibold mb-4">
+                  🔒 Private Comments ({comments.length}) — To view, add your own comment first.
+                </p>
+              )}
               <CommentForm
                 postId={post.id}
                 onCommentSuccess={() => setRefreshCount((c) => c + 1)}
