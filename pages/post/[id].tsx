@@ -10,7 +10,7 @@ import CommentForm from '../../components/CommentForm';
 import Link from 'next/link';
 
 console.log('fetchPostAndComments called');
-console.log('f3162f90-272d-4320-94d8-953935dd04d0:', user?.id);
+console.log('f3162f90-272d-4320-94d8-953935dd04d0:');
 
 
 const PostPage = () => {
