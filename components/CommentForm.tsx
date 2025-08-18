@@ -1,3 +1,4 @@
+// components/CommentForm.tsx
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabaseClient';
@@ -18,13 +19,21 @@ const CommentForm = ({ postId, onCommentSuccess }: CommentFormProps) => {
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
-
       if (!session) {
         throw new Error("You must be logged in to comment.");
       }
 
-      // Insert comment directly into Supabase (bypassing API)
-      const generatedName = generateAnonymousName(); // Use your logic or replace with fixed string
+      // Simple anonymous name generator (can replace with your own logic)
+      const generateAnonymousName = () => {
+        const adjectives = ['Galactic', 'Radiant', 'Nebulous', 'Stellar', 'Cosmic', 'Lunar', 'Solar'];
+        const nouns = ['Photon', 'Cluster', 'Nebula', 'Comet', 'Meteor', 'Quasar', 'Pulsar'];
+        const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+        const noun = nouns[Math.floor(Math.random() * nouns.length)];
+        const number = Math.floor(Math.random() * 100);
+        return `${adjective}_${noun}_${number}`;
+      };
+
+      const generatedName = generateAnonymousName();
 
       const { error } = await supabase
         .from('comments')
@@ -53,16 +62,6 @@ const CommentForm = ({ postId, onCommentSuccess }: CommentFormProps) => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Simple anonymous name generator (replace with your own logic)
-  const generateAnonymousName = () => {
-    const adjectives = ['Galactic', 'Radiant', 'Nebulous', 'Stellar', 'Cosmic', 'Lunar', 'Solar'];
-    const nouns = ['Photon', 'Cluster', 'Nebula', 'Comet', 'Meteor', 'Quasar', 'Pulsar'];
-    const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
-    const noun = nouns[Math.floor(Math.random() * nouns.length)];
-    const number = Math.floor(Math.random() * 100);
-    return `${adjective}_${noun}_${number}`;
   };
 
   return (

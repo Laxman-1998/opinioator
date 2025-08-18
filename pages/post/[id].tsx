@@ -19,6 +19,7 @@ const PostPage = () => {
   const [loading, setLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
   const [hasCommented, setHasCommented] = useState(false);
+  const [refreshCount, setRefreshCount] = useState(0);
 
   const fetchPostAndComments = async () => {
     if (!id) return;
@@ -31,7 +32,6 @@ const PostPage = () => {
     setLoading(true);
 
     const postIdNum = Number(id);
-
     const { data: postData } = await supabase.from('posts').select('*').eq('id', postIdNum).single();
     setPost(postData);
 
@@ -48,6 +48,7 @@ const PostPage = () => {
       .select('id, created_at, content, anonymous_name, post_id, user_id')
       .eq('post_id', postIdNum)
       .order('created_at');
+
     setComments(allComments || []);
     console.log('All comment user IDs:', (allComments || []).map(c => c.user_id));
     console.log('Raw allComments:', allComments);
@@ -63,6 +64,7 @@ const PostPage = () => {
     } else {
       setHasCommented(false);
     }
+
     setLoading(false);
   };
 
@@ -71,7 +73,7 @@ const PostPage = () => {
       fetchPostAndComments();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, user, authLoading]);
+  }, [id, user, authLoading, refreshCount]);
 
   if (loading) return <p className="text-center">Loading post...</p>;
   if (!post) return <p className="text-center">Post not found.</p>;
@@ -84,7 +86,7 @@ const PostPage = () => {
         <div className="border-t-2 border-dashed border-slate-800 pt-6">
           <h3 className="text-xl font-bold text-white mb-4">Private Comments ({comments.length})</h3>
           <CommentList comments={comments} />
-          <CommentForm postId={post.id} onCommentSuccess={fetchPostAndComments} />
+          <CommentForm postId={post.id} onCommentSuccess={() => setRefreshCount((c) => c + 1)} />
         </div>
       ) : user ? (
         <div className="border-t-2 border-dashed border-slate-800 pt-6">
@@ -92,15 +94,14 @@ const PostPage = () => {
             <>
               <h3 className="text-xl font-bold text-white mb-4">Private Comments ({comments.length})</h3>
               <CommentList comments={comments} />
-              <CommentForm postId={post.id} onCommentSuccess={fetchPostAndComments} />
+              <CommentForm postId={post.id} onCommentSuccess={() => setRefreshCount((c) => c + 1)} />
             </>
           ) : (
             <>
-              {/* Simple note instead of banners */}
               <p className="italic text-slate-400 mb-4">
                 No private comments yet. Be the first to share your perspective.
               </p>
-              <CommentForm postId={post.id} onCommentSuccess={fetchPostAndComments} />
+              <CommentForm postId={post.id} onCommentSuccess={() => setRefreshCount((c) => c + 1)} />
             </>
           )}
         </div>
