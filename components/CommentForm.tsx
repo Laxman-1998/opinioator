@@ -45,6 +45,7 @@ const CommentForm = ({ postId, onCommentSuccess }: CommentFormProps) => {
       
       toast.success('Comment posted!');
       setContent('');
+      console.log('Comment submitted, calling onCommentSuccess');
       onCommentSuccess();
     } catch (error) {
       console.error(error);
