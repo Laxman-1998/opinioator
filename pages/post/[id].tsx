@@ -22,6 +22,8 @@ const PostPage = () => {
 
   const fetchPostAndComments = async () => {
     if (!id) return;
+    console.log('Router query id:', id);
+    console.log('Type of id:', typeof id);
     console.log('fetchPostAndComments called');
     console.log('Current user ID:', user?.id);
 
