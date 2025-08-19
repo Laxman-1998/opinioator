@@ -7,7 +7,7 @@ import { Post, Comment } from '../../lib/types';
 import PostCard from '../../components/PostCard';
 import CommentList from '../../components/CommentList';
 import CommentForm from '../../components/CommentForm';
-import ReportModal from '../../components/ReportModal'; // Import the modal
+import ReportModal from '../../components/ReportModal';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 
@@ -21,8 +21,6 @@ const PostPage = () => {
   const [isOwner, setIsOwner] = useState(false);
   const [hasCommented, setHasCommented] = useState(false);
   const [refreshCount, setRefreshCount] = useState(0);
-
-  // Modal state for reporting
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [reportingCommentId, setReportingCommentId] = useState<number | null>(null);
 
@@ -47,17 +45,27 @@ const PostPage = () => {
     if (owner) {
       setHasCommented(true);
     } else if (user) {
-      const didComment = (allComments || []).some(
-        (comment) => comment.user_id === user.id
-      );
+      const didComment = (allComments || []).some(comment => comment.user_id === user.id);
       setHasCommented(didComment);
+      if (didComment && typeof window !== 'undefined' && user) {
+        localStorage.setItem(`hasCommented_post_${id}_${user.id}`, 'true');
+      }
     } else {
       setHasCommented(false);
     }
     setLoading(false);
   };
 
-  // Open report modal
+  // Restore persisted hasCommented on mount
+  useEffect(() => {
+    if (user && typeof window !== 'undefined' && id) {
+      const stored = localStorage.getItem(`hasCommented_post_${id}_${user.id}`);
+      if (stored === 'true') {
+        setHasCommented(true);
+      }
+    }
+  }, [id, user]);
+
   const handleReport = (commentId: number) => {
     setReportingCommentId(commentId);
     setReportModalOpen(true);
@@ -70,7 +78,6 @@ const PostPage = () => {
     setRefreshCount(c => c + 1);
   };
 
-  // Voting and liking handlers with loading and toast feedback
   const handleUpvote = async (commentId: number) => {
     toast.loading('Upvoting comment...');
     try {
@@ -78,7 +85,7 @@ const PostPage = () => {
       toast.dismiss();
       toast.success('Upvoted!');
       setRefreshCount(c => c + 1);
-    } catch (error) {
+    } catch {
       toast.dismiss();
       toast.error('Failed to upvote comment');
     }
@@ -91,7 +98,7 @@ const PostPage = () => {
       toast.dismiss();
       toast.success('Downvoted!');
       setRefreshCount(c => c + 1);
-    } catch (error) {
+    } catch {
       toast.dismiss();
       toast.error('Failed to downvote comment');
     }
@@ -104,7 +111,7 @@ const PostPage = () => {
       toast.dismiss();
       toast.success('Liked!');
       setRefreshCount(c => c + 1);
-    } catch (error) {
+    } catch {
       toast.dismiss();
       toast.error('Failed to like comment');
     }
@@ -129,11 +136,33 @@ const PostPage = () => {
   return (
     <div className="w-full flex flex-col gap-6">
       <PostCard post={post} commentCount={comments.length} />
-      {isOwner ? (
-        <div className="border-t-2 border-dashed border-slate-800 pt-6">
-          <h3 className="text-xl font-bold text-white mb-4">
-            Private Comments ({comments.length})
-          </h3>
+
+      <div className="border-t-2 border-dashed border-slate-800 pt-6">
+        <h3 className="text-xl font-bold text-white mb-4">
+          Private Comments ({comments.length})
+        </h3>
+
+        {/* Comment Form above comment list */}
+        <CommentForm
+          postId={post.id}
+          onCommentSuccess={() => {
+            if (user && id) {
+              localStorage.setItem(`hasCommented_post_${id}_${user.id}`, 'true');
+            }
+            setHasCommented(true);
+            setRefreshCount(c => c + 1);
+          }}
+        />
+
+        {comments.length === 0 ? (
+          <p className="text-indigo-300 italic mt-6">
+            Be the first to comment privately and anonymously.
+          </p>
+        ) : !hasCommented ? (
+          <p className="text-indigo-300 italic mt-6">
+            🔒 Private Comments ({comments.length}) — To view, please add your own comment first.
+          </p>
+        ) : (
           <CommentList
             comments={comments}
             onReport={handleReport}
@@ -141,60 +170,10 @@ const PostPage = () => {
             onDownvote={handleDownvote}
             onLike={handleLike}
           />
-          <CommentForm
-            postId={post.id}
-            onCommentSuccess={() => setRefreshCount((c) => c + 1)}
-          />
-        </div>
-      ) : user ? (
-        <div className="border-t-2 border-dashed border-slate-800 pt-6">
-          {hasCommented ? (
-            <>
-              <h3 className="text-xl font-bold text-white mb-4">
-                Private Comments ({comments.length})
-              </h3>
-              <CommentList
-                comments={comments}
-                onReport={handleReport}
-                onUpvote={handleUpvote}
-                onDownvote={handleDownvote}
-                onLike={handleLike}
-              />
-              <CommentForm
-                postId={post.id}
-                onCommentSuccess={() => setRefreshCount((c) => c + 1)}
-              />
-            </>
-          ) : (
-            <>
-              {comments.length === 0 ? (
-                <p className="p-4 rounded-lg bg-gradient-to-r from-indigo-900 via-slate-900 to-fuchsia-900 shadow-lg border border-indigo-400 text-center italic text-indigo-200 font-semibold mb-4">
-                  ✨ Be the first to add a private comment!
-                </p>
-              ) : (
-                <p className="p-4 rounded-lg bg-gradient-to-r from-indigo-900 via-slate-900 to-fuchsia-900 shadow-lg border border-indigo-400 text-center italic text-indigo-200 font-semibold mb-4">
-                  🔒 Private Comments ({comments.length}) — To view, add your own comment first.
-                </p>
-              )}
-              <CommentForm
-                postId={post.id}
-                onCommentSuccess={() => setRefreshCount((c) => c + 1)}
-              />
-            </>
-          )}
-        </div>
-      ) : (
-        <div className="text-center mt-6 pt-6 border-t-2 border-dashed border-slate-800">
-          <p className="text-slate-400">
-            <Link href="/login">
-              <span className="text-blue-400 hover:underline">Log in</span>
-            </Link>{' '}
-            to leave a private comment.
-          </p>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Report Modal */}
+      {/* Report modal */}
       <ReportModal
         open={reportModalOpen}
         onClose={() => setReportModalOpen(false)}

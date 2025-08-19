@@ -1,5 +1,4 @@
-// components/CommentList.tsx
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Comment } from '../lib/types';
 
 // Utility for relative time display
@@ -21,26 +20,15 @@ const timeSince = (dateStr: string) => {
 
 // Avatar component generates colored circle with initials
 const Avatar = ({ name }: { name: string }) => {
-  // Simple hash to pick color
   const colors = [
-    '#f87171', // red-400
-    '#60a5fa', // blue-400
-    '#34d399', // green-400
-    '#fbbf24', // yellow-400
-    '#a78bfa', // purple-400
-    '#f43f5e', // pink-500
-    '#22d3ee', // cyan-400
+    '#f87171', '#60a5fa', '#34d399', '#fbbf24', '#a78bfa', '#f43f5e', '#22d3ee',
   ];
-
   const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const color = colors[hash % colors.length];
-
-  // Extract initials from name parts
   const initials = name
     .split('_')
     .map((part) => part[0].toUpperCase())
     .join('');
-
   return (
     <div
       className="flex items-center justify-center rounded-full text-white font-bold select-none"
@@ -58,7 +46,7 @@ type CommentListProps = {
   onUpvote: (commentId: number) => void;
   onDownvote: (commentId: number) => void;
   onLike: (commentId: number) => void;
-  hideKeywords?: string[]; // comments containing these are hidden
+  hideKeywords?: string[];
   reportThreshold?: number;
 };
 
@@ -71,11 +59,9 @@ const CommentList = ({
   hideKeywords = [],
   reportThreshold = 3,
 }: CommentListProps) => {
-  // State for sorting and filtering UI
   const [sortOrder, setSortOrder] = useState<'recent' | 'liked' | 'upvote'>('recent');
   const [filterText, setFilterText] = useState('');
 
-  // Filter out comments with too many reports or containing hideKeywords
   const filteredComments = useMemo(() => {
     return comments.filter((comment) => {
       if ((comment.reportCount ?? 0) >= reportThreshold) return false;
@@ -84,7 +70,6 @@ const CommentList = ({
         if (hideKeywords.some((kw) => lowered.includes(kw.toLowerCase()))) return false;
       }
       if (filterText.trim() === '') return true;
-      // filterText in content or anonymous_name (case insensitive)
       const lcFilter = filterText.toLowerCase();
       return (
         comment.content.toLowerCase().includes(lcFilter) ||
@@ -93,7 +78,6 @@ const CommentList = ({
     });
   }, [comments, hideKeywords, filterText, reportThreshold]);
 
-  // Sort filteredComments based on sortOrder
   const sortedComments = useMemo(() => {
     const arr = [...filteredComments];
     if (sortOrder === 'recent') {
@@ -106,7 +90,6 @@ const CommentList = ({
     return arr;
   }, [filteredComments, sortOrder]);
 
-  // Helper for safety notice based on keywords (simple NLP)
   const sensitiveKeywords = ['violence', 'abuse', 'suicide', 'self-harm'];
   const hasSensitiveContent = (content: string) =>
     sensitiveKeywords.some((kw) => content.toLowerCase().includes(kw));
@@ -130,7 +113,6 @@ const CommentList = ({
             <option value="upvote">Most Upvoted</option>
           </select>
         </div>
-
         <div>
           <input
             type="text"
@@ -145,7 +127,7 @@ const CommentList = ({
       {/* Comments List */}
       {sortedComments.length === 0 ? (
         <p className="text-center text-slate-400 italic py-8">
-          Be the first to comment privately!
+          Be the first to comment privately and anonymously.
         </p>
       ) : (
         <div className="flex flex-col gap-4">
@@ -166,16 +148,13 @@ const CommentList = ({
                         {comment.edited_at ? ' (edited)' : ''}
                       </p>
                     </div>
-
                     {/* Comment content */}
                     <p className="text-slate-200 mt-2 whitespace-pre-wrap">{comment.content}</p>
-
                     {sensitive && (
                       <p className="mt-1 text-xs italic text-yellow-400">
                         ⚠️ This comment may contain sensitive content. If you need help, seek support.
                       </p>
                     )}
-
                     {/* Engagement buttons */}
                     <div className="flex items-center gap-4 mt-3 text-xs text-slate-400 select-none">
                       <button

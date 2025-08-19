@@ -11,7 +11,7 @@ type CommentFormProps = {
   onCancelReply?: () => void; // to cancel reply UI
 };
 
-const MAX_COMMENT_LENGTH = 300;
+const MAX_COMMENT_LENGTH = 1500;
 const sensitiveKeywords = ['violence', 'abuse', 'suicide', 'self-harm'];
 
 const CommentForm = ({
@@ -23,14 +23,11 @@ const CommentForm = ({
   const [content, setContent] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [charCount, setCharCount] = useState(0);
-  const [showPreview, setShowPreview] = useState(false);
   const [safetyWarning, setSafetyWarning] = useState<string | null>(null);
+  // Removed showPreview and related code as requested
 
-  // Update char count and safety warning on content change
   useEffect(() => {
     setCharCount(content.length);
-
-    // Basic sensitive content check (case-insensitive)
     const lowered = content.toLowerCase();
     const hasSensitive = sensitiveKeywords.some((kw) => lowered.includes(kw));
     setSafetyWarning(
@@ -48,16 +45,11 @@ const CommentForm = ({
       toast.error(`Comment cannot exceed ${MAX_COMMENT_LENGTH} characters.`);
       return;
     }
-
     setIsLoading(true);
-
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('You must be logged in to comment.');
-      }
+      if (!session) throw new Error('You must be logged in to comment.');
 
-      // Simple anonymous name generator (can replace with your own logic)
       const generateAnonymousName = () => {
         const adjectives = [
           'Galactic', 'Radiant', 'Nebulous', 'Stellar', 'Cosmic', 'Lunar', 'Solar',
@@ -72,7 +64,6 @@ const CommentForm = ({
       };
 
       const generatedName = generateAnonymousName();
-
       const insertPayload: any = {
         content,
         post_id: Number(postId),
@@ -83,13 +74,8 @@ const CommentForm = ({
         insertPayload.parent_comment_id = parentCommentId;
       }
 
-      const { error } = await supabase
-        .from('comments')
-        .insert([insertPayload]);
-
-      if (error) {
-        throw error;
-      }
+      const { error } = await supabase.from('comments').insert([insertPayload]);
+      if (error) throw error;
 
       toast.success('Comment posted!');
       setContent('');
@@ -116,11 +102,7 @@ const CommentForm = ({
           onChange={(e) => setContent(e.target.value)}
           maxLength={MAX_COMMENT_LENGTH}
           className="w-full h-32 p-3 bg-slate-800/50 border border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
-          placeholder={
-            parentCommentId
-              ? 'Write a reply...'
-              : 'Share your perspective privately...'
-          }
+          placeholder={parentCommentId ? 'Write a reply...' : 'Share your perspective privately...'}
           disabled={isLoading}
           aria-describedby="comment-length-info"
         />
@@ -133,14 +115,7 @@ const CommentForm = ({
           )}
         </div>
         <div className="flex gap-4 items-center">
-          <button
-            type="button"
-            onClick={() => setShowPreview((prev) => !prev)}
-            className="text-blue-400 hover:underline text-xs"
-            disabled={isLoading}
-          >
-            {showPreview ? 'Hide Preview' : 'Show Preview'}
-          </button>
+          {/* Preview button removed as requested */}
           {parentCommentId && onCancelReply && (
             <button
               type="button"
@@ -152,19 +127,16 @@ const CommentForm = ({
             </button>
           )}
         </div>
-
-        {showPreview && (
-          <div className="prose max-w-full p-3 mt-2 bg-slate-900 rounded text-slate-100 border border-slate-700 overflow-auto">
-            <ReactMarkdown>{content || '*Nothing to preview*'}</ReactMarkdown>
-          </div>
-        )}
-
         <button
           type="submit"
-          className="bg-slate-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-slate-700 transition-colors disabled:bg-slate-500 self-end text-sm mt-2"
-          disabled={isLoading}
+          className={`bg-slate-600 text-white font-bold py-2 px-4 rounded-lg transition-colors self-end text-sm mt-2 ${
+            content.trim().length === 0 || content.length > MAX_COMMENT_LENGTH || isLoading
+              ? 'bg-gray-500 cursor-not-allowed'
+              : 'hover:bg-slate-700 cursor-pointer'
+          }`}
+          disabled={content.trim().length === 0 || content.length > MAX_COMMENT_LENGTH || isLoading}
         >
-          {isLoading ? 'Posting...' : parentCommentId ? 'Post Reply' : 'Post Comment'}
+          {isLoading ? (parentCommentId ? 'Posting reply...' : 'Posting...') : parentCommentId ? 'Post Reply' : 'Post Comment'}
         </button>
       </div>
     </form>

@@ -1,10 +1,9 @@
-// components/PostCard.tsx
 import { useState, useEffect } from 'react';
-import Slider from 'rc-slider';
 import { Post } from '../lib/types';
 import Link from 'next/link';
+import SegmentedVoteSlider from './SegmentedVoteSlider'; // New slider component
 
-// Avatar utility. You can move this to a separate Avatar.tsx if reusing.
+// Avatar component
 const Avatar = ({ name }: { name: string }) => {
   const colors = [
     '#f87171', // red-400
@@ -32,7 +31,6 @@ const Avatar = ({ name }: { name: string }) => {
   );
 };
 
-// Updated type: now accepts an optional commentCount prop for badge
 type PostCardProps = {
   post: Post;
   isLink?: boolean;
@@ -65,9 +63,12 @@ const PostCard = ({ post, isLink = true, commentCount }: PostCardProps) => {
     });
   };
 
-  const handleSliderRelease = (value: number | number[]) => {
-    if (typeof value !== 'number' || userVote) return;
-    const voteType = value >= 50 ? 'agree' : 'disagree';
+  const handleSliderChange = (value: number) => {
+    setSliderValue(value);
+  };
+
+  const handleSliderRelease = () => {
+    const voteType = sliderValue >= 50 ? 'agree' : 'disagree';
     handleVote(voteType);
   };
 
@@ -77,27 +78,19 @@ const PostCard = ({ post, isLink = true, commentCount }: PostCardProps) => {
   const agreePercentage =
     totalVotes === 0 ? 50 : Math.round((agreeCount / totalVotes) * 100);
 
-  // ========
-  // Card JSX
-  // ========
   const CardContent = (
     <div
       className={`bg-slate-900/50 p-5 rounded-lg border border-slate-800 transition-colors ${
         isLink ? 'cursor-pointer hover:border-blue-500' : ''
       }`}
     >
-      {/* Avatar + Anonymous name */}
       {currentPost.anonymous_name && (
         <div className="flex items-center mb-2">
           <Avatar name={currentPost.anonymous_name} />
           <p className="text-slate-400 text-sm italic">{currentPost.anonymous_name}</p>
         </div>
       )}
-
-      {/* Post content */}
       <p className="text-slate-200 text-lg">{currentPost.content}</p>
-
-      {/* Private Comment badge at the bottom right */}
       <div className="flex items-center justify-end mt-3">
         <span className="px-3 py-1 bg-indigo-800/70 rounded-full text-xs text-indigo-100 font-semibold shadow">
           {typeof commentCount === 'number'
@@ -108,17 +101,12 @@ const PostCard = ({ post, isLink = true, commentCount }: PostCardProps) => {
         </span>
       </div>
 
-      {/* Voting and slider */}
       <div className="mt-6 pt-4 border-t border-slate-800">
         {userVote ? (
           <div>
             <div className="flex justify-between text-sm font-bold mb-1">
-              <span className="text-red-400">
-                {currentPost.label_disagree ?? 'Disagree'}
-              </span>
-              <span className="text-green-400">
-                {currentPost.label_agree ?? 'Agree'}
-              </span>
+              <span className="text-red-400">{currentPost.label_disagree ?? 'Disagree'}</span>
+              <span className="text-green-400">{currentPost.label_agree ?? 'Agree'}</span>
             </div>
             <div className="w-full bg-slate-700 rounded-full h-2.5">
               <div
@@ -136,24 +124,13 @@ const PostCard = ({ post, isLink = true, commentCount }: PostCardProps) => {
               <span className="text-red-400">{currentPost.label_disagree ?? 'Disagree'}</span>
               <span className="text-green-400">{currentPost.label_agree ?? 'Agree'}</span>
             </div>
-            <Slider
-              min={0}
-              max={100}
+            <SegmentedVoteSlider
               value={sliderValue}
-              onChange={(value) => setSliderValue(Array.isArray(value) ? value[0] : value)}
-              onAfterChange={handleSliderRelease}
-              trackStyle={{ backgroundColor: '#3b82f6', height: 10 }}
-              handleStyle={{
-                borderColor: '#3b82f6',
-                backgroundColor: 'white',
-                height: 20,
-                width: 20,
-                marginTop: -5,
-              }}
-              railStyle={{ backgroundColor: '#374151', height: 10 }}
+              onChange={handleSliderChange}
+              segments={5}
             />
             <p className="text-center text-xs text-slate-500 mt-2">
-              Drag the slider to cast your vote
+              Click a segment to cast your vote
             </p>
           </div>
         )}
@@ -162,7 +139,7 @@ const PostCard = ({ post, isLink = true, commentCount }: PostCardProps) => {
   );
 
   return isLink ? (
-    <Link href={`/post/${post.id}`} key={post.id}>
+    <Link href={`/post/${post.id}`}>
       {CardContent}
     </Link>
   ) : (
