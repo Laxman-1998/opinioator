@@ -4,6 +4,34 @@ import Slider from 'rc-slider';
 import { Post } from '../lib/types';
 import Link from 'next/link';
 
+// Avatar utility. You can move this to a separate Avatar.tsx if reusing.
+const Avatar = ({ name }: { name: string }) => {
+  const colors = [
+    '#f87171', // red-400
+    '#60a5fa', // blue-400
+    '#34d399', // green-400
+    '#fbbf24', // yellow-400
+    '#a78bfa', // purple-400
+    '#f43f5e', // pink-500
+    '#22d3ee', // cyan-400
+  ];
+  const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const color = colors[hash % colors.length];
+  const initials = name
+    .split('_')
+    .map((part) => part[0].toUpperCase())
+    .join('');
+  return (
+    <div
+      className="flex items-center justify-center rounded-full text-white font-bold select-none mr-2"
+      style={{ backgroundColor: color, width: 32, height: 32, flexShrink: 0 }}
+      title={name.replace(/_/g, ' ')}
+    >
+      {initials}
+    </div>
+  );
+};
+
 // Updated type: now accepts an optional commentCount prop for badge
 type PostCardProps = {
   post: Post;
@@ -18,16 +46,14 @@ const PostCard = ({ post, isLink = true, commentCount }: PostCardProps) => {
 
   useEffect(() => {
     const vote = localStorage.getItem(`voted_on_post_${post.id}`);
-    if (vote) {
-      setUserVote(vote);
-    }
+    if (vote) setUserVote(vote);
   }, [post.id]);
 
   const handleVote = async (voteType: 'agree' | 'disagree') => {
     if (userVote) return;
     localStorage.setItem(`voted_on_post_${post.id}`, voteType);
     setUserVote(voteType);
-    setCurrentPost(prevPost => ({
+    setCurrentPost((prevPost) => ({
       ...prevPost,
       agree_count: (prevPost.agree_count ?? 0) + (voteType === 'agree' ? 1 : 0),
       disagree_count: (prevPost.disagree_count ?? 0) + (voteType === 'disagree' ? 1 : 0),
@@ -60,11 +86,12 @@ const PostCard = ({ post, isLink = true, commentCount }: PostCardProps) => {
         isLink ? 'cursor-pointer hover:border-blue-500' : ''
       }`}
     >
-      {/* Anonymous name display */}
+      {/* Avatar + Anonymous name */}
       {currentPost.anonymous_name && (
-        <p className="text-slate-400 text-sm italic mb-2">
-          {currentPost.anonymous_name}
-        </p>
+        <div className="flex items-center mb-2">
+          <Avatar name={currentPost.anonymous_name} />
+          <p className="text-slate-400 text-sm italic">{currentPost.anonymous_name}</p>
+        </div>
       )}
 
       {/* Post content */}
@@ -74,9 +101,9 @@ const PostCard = ({ post, isLink = true, commentCount }: PostCardProps) => {
       <div className="flex items-center justify-end mt-3">
         <span className="px-3 py-1 bg-indigo-800/70 rounded-full text-xs text-indigo-100 font-semibold shadow">
           {typeof commentCount === 'number'
-            ? (commentCount === 0
+            ? commentCount === 0
               ? 'No private comments'
-              : `Private Comments: ${commentCount}`)
+              : `Private Comments: ${commentCount}`
             : null}
         </span>
       </div>
@@ -86,8 +113,12 @@ const PostCard = ({ post, isLink = true, commentCount }: PostCardProps) => {
         {userVote ? (
           <div>
             <div className="flex justify-between text-sm font-bold mb-1">
-              <span className="text-red-400">{currentPost.label_disagree ?? 'Disagree'}</span>
-              <span className="text-green-400">{currentPost.label_agree ?? 'Agree'}</span>
+              <span className="text-red-400">
+                {currentPost.label_disagree ?? 'Disagree'}
+              </span>
+              <span className="text-green-400">
+                {currentPost.label_agree ?? 'Agree'}
+              </span>
             </div>
             <div className="w-full bg-slate-700 rounded-full h-2.5">
               <div
@@ -109,9 +140,7 @@ const PostCard = ({ post, isLink = true, commentCount }: PostCardProps) => {
               min={0}
               max={100}
               value={sliderValue}
-              onChange={(value) =>
-                setSliderValue(Array.isArray(value) ? value[0] : value)
-              }
+              onChange={(value) => setSliderValue(Array.isArray(value) ? value[0] : value)}
               onAfterChange={handleSliderRelease}
               trackStyle={{ backgroundColor: '#3b82f6', height: 10 }}
               handleStyle={{
