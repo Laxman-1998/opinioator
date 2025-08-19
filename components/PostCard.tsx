@@ -4,14 +4,13 @@ import Slider from 'rc-slider';
 import { Post } from '../lib/types';
 import Link from 'next/link';
 
-// Our component now accepts an optional 'isLink' property and optional 'commentCount' property
+// Updated type: now accepts an optional commentCount prop for badge
 type PostCardProps = {
   post: Post;
   isLink?: boolean;
-  commentCount?: number; // Added commentCount prop
+  commentCount?: number;
 };
 
-// We set a default value of true for isLink
 const PostCard = ({ post, isLink = true, commentCount }: PostCardProps) => {
   const [currentPost, setCurrentPost] = useState(post);
   const [userVote, setUserVote] = useState<string | null>(null);
@@ -61,22 +60,28 @@ const PostCard = ({ post, isLink = true, commentCount }: PostCardProps) => {
         isLink ? 'cursor-pointer hover:border-blue-500' : ''
       }`}
     >
-      {/* ✅ Removed extra ✨ here — anonymous_name already contains it */}
+      {/* Anonymous name display */}
       {currentPost.anonymous_name && (
         <p className="text-slate-400 text-sm italic mb-2">
           {currentPost.anonymous_name}
         </p>
       )}
+
+      {/* Post content */}
       <p className="text-slate-200 text-lg">{currentPost.content}</p>
 
-      {typeof commentCount === 'number' && (
-        <div className="mt-2 text-sm text-slate-400 italic transition-opacity duration-500">
-          {commentCount === 0
-            ? 'Be the first to add a private comment.'
-            : `Private Comments (${commentCount}) — To view, add your own comment first.`}
-        </div>
-      )}
+      {/* Private Comment badge at the bottom right */}
+      <div className="flex items-center justify-end mt-3">
+        <span className="px-3 py-1 bg-indigo-800/70 rounded-full text-xs text-indigo-100 font-semibold shadow">
+          {typeof commentCount === 'number'
+            ? (commentCount === 0
+              ? 'No private comments'
+              : `Private Comments: ${commentCount}`)
+            : null}
+        </span>
+      </div>
 
+      {/* Voting and slider */}
       <div className="mt-6 pt-4 border-t border-slate-800">
         {userVote ? (
           <div>
