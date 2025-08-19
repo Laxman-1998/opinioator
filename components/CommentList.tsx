@@ -113,6 +113,7 @@ const CommentList = ({
             <option value="upvote">Most Upvoted</option>
           </select>
         </div>
+
         <div>
           <input
             type="text"
@@ -142,19 +143,24 @@ const CommentList = ({
                   <Avatar name={comment.anonymous_name ?? 'Anon_User'} />
                   <div className="flex-1">
                     <div className="flex justify-between items-center">
-                      <p className="text-sm text-slate-400 font-bold select-text">{comment.anonymous_name} said:</p>
+                      <p className="text-sm text-slate-400 font-bold select-text">
+                        {comment.anonymous_name} said:
+                      </p>
                       <p className="text-xs text-slate-500 whitespace-nowrap select-text">
                         {timeSince(comment.created_at)}
                         {comment.edited_at ? ' (edited)' : ''}
                       </p>
                     </div>
+
                     {/* Comment content */}
                     <p className="text-slate-200 mt-2 whitespace-pre-wrap">{comment.content}</p>
+
                     {sensitive && (
                       <p className="mt-1 text-xs italic text-yellow-400">
                         ⚠️ This comment may contain sensitive content. If you need help, seek support.
                       </p>
                     )}
+
                     {/* Engagement buttons */}
                     <div className="flex items-center gap-4 mt-3 text-xs text-slate-400 select-none">
                       <button

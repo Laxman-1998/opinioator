@@ -75,8 +75,7 @@ const PostCard = ({ post, isLink = true, commentCount }: PostCardProps) => {
   const agreeCount = currentPost.agree_count ?? 0;
   const disagreeCount = currentPost.disagree_count ?? 0;
   const totalVotes = agreeCount + disagreeCount;
-  const agreePercentage =
-    totalVotes === 0 ? 50 : Math.round((agreeCount / totalVotes) * 100);
+  const agreePercentage = totalVotes === 0 ? 50 : Math.round((agreeCount / totalVotes) * 100);
 
   const CardContent = (
     <div
@@ -100,7 +99,6 @@ const PostCard = ({ post, isLink = true, commentCount }: PostCardProps) => {
             : null}
         </span>
       </div>
-
       <div className="mt-6 pt-4 border-t border-slate-800">
         {userVote ? (
           <div>
