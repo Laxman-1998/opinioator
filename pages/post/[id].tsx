@@ -7,7 +7,9 @@ import { Post, Comment } from '../../lib/types';
 import PostCard from '../../components/PostCard';
 import CommentList from '../../components/CommentList';
 import CommentForm from '../../components/CommentForm';
+import ReportModal from '../../components/ReportModal'; // Import the modal
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 
 const PostPage = () => {
   const { user, loading: authLoading } = useAuth();
@@ -19,6 +21,10 @@ const PostPage = () => {
   const [isOwner, setIsOwner] = useState(false);
   const [hasCommented, setHasCommented] = useState(false);
   const [refreshCount, setRefreshCount] = useState(0);
+
+  // Modal state for reporting
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [reportingCommentId, setReportingCommentId] = useState<number | null>(null);
 
   const fetchPostAndComments = async () => {
     if (!id) return;
@@ -51,31 +57,57 @@ const PostPage = () => {
     setLoading(false);
   };
 
-  // Handlers for CommentList events
+  // Open report modal
   const handleReport = (commentId: number) => {
-    console.log('Report comment:', commentId);
-    // You can trigger your ReportModal here or call reporting API
+    setReportingCommentId(commentId);
+    setReportModalOpen(true);
   };
 
-  const handleUpvote = async (commentId: number) => {
-    console.log('Upvote comment:', commentId);
-    // Call your vote API for upvote
-    await supabase.rpc('increment_comment_upvote', { comment_id: commentId }); // example RPC function
+  const onReported = () => {
+    toast.success('Thank you for reporting. Our team will review the comment.');
+    setReportModalOpen(false);
+    setReportingCommentId(null);
     setRefreshCount(c => c + 1);
+  };
+
+  // Voting and liking handlers with loading and toast feedback
+  const handleUpvote = async (commentId: number) => {
+    toast.loading('Upvoting comment...');
+    try {
+      await supabase.rpc('increment_comment_upvote', { comment_id: commentId });
+      toast.dismiss();
+      toast.success('Upvoted!');
+      setRefreshCount(c => c + 1);
+    } catch (error) {
+      toast.dismiss();
+      toast.error('Failed to upvote comment');
+    }
   };
 
   const handleDownvote = async (commentId: number) => {
-    console.log('Downvote comment:', commentId);
-    // Call your vote API for downvote
-    await supabase.rpc('increment_comment_downvote', { comment_id: commentId });
-    setRefreshCount(c => c + 1);
+    toast.loading('Downvoting comment...');
+    try {
+      await supabase.rpc('increment_comment_downvote', { comment_id: commentId });
+      toast.dismiss();
+      toast.success('Downvoted!');
+      setRefreshCount(c => c + 1);
+    } catch (error) {
+      toast.dismiss();
+      toast.error('Failed to downvote comment');
+    }
   };
 
   const handleLike = async (commentId: number) => {
-    console.log('Like comment:', commentId);
-    // Call your like API
-    await supabase.rpc('increment_comment_like', { comment_id: commentId });
-    setRefreshCount(c => c + 1);
+    toast.loading('Liking comment...');
+    try {
+      await supabase.rpc('increment_comment_like', { comment_id: commentId });
+      toast.dismiss();
+      toast.success('Liked!');
+      setRefreshCount(c => c + 1);
+    } catch (error) {
+      toast.dismiss();
+      toast.error('Failed to like comment');
+    }
   };
 
   useEffect(() => {
@@ -88,7 +120,6 @@ const PostPage = () => {
   if (loading)
     return (
       <div className="text-center py-10">
-        {/* Loading spinner here */}
         <p className="mt-2 text-gray-600">Loading post...</p>
       </div>
     );
@@ -162,6 +193,14 @@ const PostPage = () => {
           </p>
         </div>
       )}
+
+      {/* Report Modal */}
+      <ReportModal
+        open={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        commentId={reportingCommentId}
+        onReported={onReported}
+      />
     </div>
   );
 };

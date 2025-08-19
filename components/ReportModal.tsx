@@ -34,11 +34,12 @@ const ReportModal = ({ open, onClose, commentId, onReported }: ReportModalProps)
     setIsSubmitting(true);
 
     try {
-      // Replace with your API call
-      const response = await fetch('/api/reportComment', {
+      // Replace with your function to call reporting API
+      const response = await fetch('/api/comment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          type: 'report',
           commentId,
           reason,
           additionalInfo,
