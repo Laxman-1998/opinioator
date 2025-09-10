@@ -1,4 +1,3 @@
-// pages/post/[id].tsx
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
@@ -21,6 +20,9 @@ const PostPage = () => {
   const [hasCommented, setHasCommented] = useState(false);
   const [refreshCount, setRefreshCount] = useState(0);
 
+  // New state to track which comment is being replied to
+  const [replyToCommentId, setReplyToCommentId] = useState<number | null>(null);
+
   const fetchPostAndComments = async () => {
     if (!id) return;
 
@@ -41,7 +43,7 @@ const PostPage = () => {
 
     const { data: allComments } = await supabase
       .from('comments')
-      .select('id, created_at, content, anonymous_name, post_id, user_id')
+      .select('id, created_at, content, anonymous_name, post_id, user_id, parent_id')
       .eq('post_id', postIdNum)
       .order('created_at');
 
@@ -108,11 +110,31 @@ const PostPage = () => {
           <h3 className="text-xl font-bold text-white mb-4">
             Private Comments ({comments.length})
           </h3>
-          <CommentList comments={comments} />
-          <CommentForm
-            postId={post.id}
-            onCommentSuccess={() => setRefreshCount((c) => c + 1)}
-          />
+          <CommentList comments={comments} onReplyClick={setReplyToCommentId} />
+
+          {replyToCommentId ? (
+            <div className="mt-4 ml-6">
+              <CommentForm
+                postId={post.id}
+                parentId={replyToCommentId}
+                onCommentSuccess={() => {
+                  setRefreshCount((c) => c + 1);
+                  setReplyToCommentId(null);
+                }}
+              />
+              <button
+                className="mt-2 text-sm text-red-400 hover:underline"
+                onClick={() => setReplyToCommentId(null)}
+              >
+                Cancel Reply
+              </button>
+            </div>
+          ) : (
+            <CommentForm
+              postId={post.id}
+              onCommentSuccess={() => setRefreshCount((c) => c + 1)}
+            />
+          )}
         </div>
       ) : user ? (
         <div className="border-t-2 border-dashed border-slate-800 pt-6">
@@ -121,11 +143,31 @@ const PostPage = () => {
               <h3 className="text-xl font-bold text-white mb-4">
                 Private Comments ({comments.length})
               </h3>
-              <CommentList comments={comments} />
-              <CommentForm
-                postId={post.id}
-                onCommentSuccess={() => setRefreshCount((c) => c + 1)}
-              />
+              <CommentList comments={comments} onReplyClick={setReplyToCommentId} />
+
+              {replyToCommentId ? (
+                <div className="mt-4 ml-6">
+                  <CommentForm
+                    postId={post.id}
+                    parentId={replyToCommentId}
+                    onCommentSuccess={() => {
+                      setRefreshCount((c) => c + 1);
+                      setReplyToCommentId(null);
+                    }}
+                  />
+                  <button
+                    className="mt-2 text-sm text-red-400 hover:underline"
+                    onClick={() => setReplyToCommentId(null)}
+                  >
+                    Cancel Reply
+                  </button>
+                </div>
+              ) : (
+                <CommentForm
+                  postId={post.id}
+                  onCommentSuccess={() => setRefreshCount((c) => c + 1)}
+                />
+              )}
             </>
           ) : (
             <>

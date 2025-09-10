@@ -1,4 +1,3 @@
-// pages/api/comment.ts
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
 
@@ -11,6 +10,7 @@ const nouns = [
   "Comet", "Nebula", "Star", "Meteor", "Voyager", "Rocket", "Pulsar", "Astro",
   "Satellite", "Quasar", "Eclipse", "Orbit", "Photon", "Cluster", "Magnetar", "Nova", "Telescope"
 ];
+
 function generateSpaceAnon() {
   const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
   const noun = nouns[Math.floor(Math.random() * nouns.length)];
@@ -28,12 +28,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
-
     const token = req.headers.authorization?.split(' ')[1];
     if (!token) throw new Error('No token provided');
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     if (userError || !user) throw new Error('Invalid token');
-    // If we get here, the user is valid.
 
     // 2. Now, create the admin client with the service_role key
     const supabaseAdmin = createClient(
@@ -41,15 +39,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    const { content, post_id } = req.body;
+    const { content, post_id, parent_id } = req.body;
 
-    // 3. Generate anonymous name
     const anonymous_name = generateSpaceAnon();
 
-    // 4. Insert the comment with the anonymous_name
+    const insertData: Record<string, any> = { content, post_id, user_id: user.id, anonymous_name };
+    if (parent_id) {
+      insertData.parent_id = parent_id;
+    }
+
     const { error: insertError } = await supabaseAdmin
       .from('comments')
-      .insert([{ content, post_id, user_id: user.id, anonymous_name }]);
+      .insert([insertData]);
+
     if (insertError) throw insertError;
 
     return res.status(200).json({ message: "Comment posted successfully." });

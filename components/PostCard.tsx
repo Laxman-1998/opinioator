@@ -1,10 +1,24 @@
-// components/PostCard.tsx
 import { useState, useEffect } from 'react';
-import Slider from 'rc-slider';
 import { Post } from '../lib/types';
 import Link from 'next/link';
 
-// Updated type: now accepts an optional commentCount prop for badge
+// Utility to get colored circle with initial
+const animalInitialColors: Record<string, string> = {
+  P: '#ef4444', // red
+  C: '#3b82f6', // blue
+  N: '#10b981', // green
+  M: '#f59e0b', // amber
+  // Add more as needed
+};
+
+const getAnimalInitialAndColor = (name: string) => {
+  if (!name) return { initial: '?', color: '#9ca3af' };
+  const initial = name.charAt(0).toUpperCase();
+  const color = animalInitialColors[initial] || '#6366f1'; // default indigo
+  return { initial, color };
+};
+
+// Updated type with commentCount for private comments badge
 type PostCardProps = {
   post: Post;
   isLink?: boolean;
@@ -14,7 +28,6 @@ type PostCardProps = {
 const PostCard = ({ post, isLink = true, commentCount }: PostCardProps) => {
   const [currentPost, setCurrentPost] = useState(post);
   const [userVote, setUserVote] = useState<string | null>(null);
-  const [sliderValue, setSliderValue] = useState(50);
 
   useEffect(() => {
     const vote = localStorage.getItem(`voted_on_post_${post.id}`);
@@ -39,21 +52,13 @@ const PostCard = ({ post, isLink = true, commentCount }: PostCardProps) => {
     });
   };
 
-  const handleSliderRelease = (value: number | number[]) => {
-    if (typeof value !== 'number' || userVote) return;
-    const voteType = value >= 50 ? 'agree' : 'disagree';
-    handleVote(voteType);
-  };
-
   const agreeCount = currentPost.agree_count ?? 0;
   const disagreeCount = currentPost.disagree_count ?? 0;
   const totalVotes = agreeCount + disagreeCount;
-  const agreePercentage =
-    totalVotes === 0 ? 50 : Math.round((agreeCount / totalVotes) * 100);
+  const agreePercentage = totalVotes === 0 ? 50 : Math.round((agreeCount / totalVotes) * 100);
 
-  // ========
-  // Card JSX
-  // ========
+  const { initial, color } = getAnimalInitialAndColor(currentPost.anonymous_name || '');
+
   const CardContent = (
     <div
       className={`bg-slate-900/50 p-5 rounded-lg border border-slate-800 transition-colors ${
@@ -62,83 +67,85 @@ const PostCard = ({ post, isLink = true, commentCount }: PostCardProps) => {
     >
       {/* Anonymous name display */}
       {currentPost.anonymous_name && (
-        <p className="text-slate-400 text-sm italic mb-2">
-          {currentPost.anonymous_name}
-        </p>
+        <p className="text-slate-400 text-sm italic mb-2">{currentPost.anonymous_name}</p>
       )}
 
       {/* Post content */}
       <p className="text-slate-200 text-lg">{currentPost.content}</p>
 
-      {/* Private Comment badge at the bottom right */}
+      {/* Private Comment badge with colored circle icon */}
       <div className="flex items-center justify-end mt-3">
-        <span className="px-3 py-1 bg-indigo-800/70 rounded-full text-xs text-indigo-100 font-semibold shadow">
+        <span
+          className="flex items-center justify-center rounded-full text-xs font-semibold shadow"
+          style={{
+            minWidth: '40px',
+            height: '24px',
+            backgroundColor: '#4f46e5',
+            color: '#dbd4f7',
+            gap: '6px',
+            padding: '0 8px',
+          }}
+        >
+          <span
+            className="flex items-center justify-center rounded-full w-6 h-6 font-bold"
+            style={{ backgroundColor: color }}
+          >
+            {initial}
+          </span>
           {typeof commentCount === 'number'
-            ? (commentCount === 0
+            ? commentCount === 0
               ? 'No private comments'
-              : `Private Comments: ${commentCount}`)
+              : `Private Comments: ${commentCount}`
             : null}
         </span>
       </div>
 
-      {/* Voting and slider */}
-      <div className="mt-6 pt-4 border-t border-slate-800">
+      {/* Voting segmented UI */}
+      <div className="mt-6 pt-4 border-t border-slate-800 flex justify-center gap-6">
         {userVote ? (
-          <div>
-            <div className="flex justify-between text-sm font-bold mb-1">
-              <span className="text-red-400">{currentPost.label_disagree ?? 'Disagree'}</span>
-              <span className="text-green-400">{currentPost.label_agree ?? 'Agree'}</span>
+          <>
+            <div className="flex flex-col items-center">
+              <span className="text-red-400 font-bold">{currentPost.label_disagree ?? 'Disagree'}</span>
+              <span>{disagreeCount}</span>
             </div>
-            <div className="w-full bg-slate-700 rounded-full h-2.5">
-              <div
-                className="bg-gradient-to-r from-red-500 via-purple-500 to-green-500 h-2.5 rounded-full"
-                style={{ width: `${agreePercentage}%` }}
-              />
+            <div className="flex flex-col items-center">
+              <span className="text-green-400 font-bold">{currentPost.label_agree ?? 'Agree'}</span>
+              <span>{agreeCount}</span>
             </div>
-            <p className="text-center text-xs text-slate-400 mt-2">
-              {agreePercentage}% Agreed ({totalVotes} total votes)
-            </p>
-          </div>
+          </>
         ) : (
-          <div onClick={(e) => isLink && e.stopPropagation()}>
-            <div className="flex justify-between text-sm font-bold mb-1">
-              <span className="text-red-400">{currentPost.label_disagree ?? 'Disagree'}</span>
-              <span className="text-green-400">{currentPost.label_agree ?? 'Agree'}</span>
-            </div>
-            <Slider
-              min={0}
-              max={100}
-              value={sliderValue}
-              onChange={(value) =>
-                setSliderValue(Array.isArray(value) ? value[0] : value)
-              }
-              onAfterChange={handleSliderRelease}
-              trackStyle={{ backgroundColor: '#3b82f6', height: 10 }}
-              handleStyle={{
-                borderColor: '#3b82f6',
-                backgroundColor: 'white',
-                height: 20,
-                width: 20,
-                marginTop: -5,
+          <>
+            <button
+              className="px-4 py-2 text-white rounded-full bg-green-600 hover:bg-green-700"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleVote('agree');
               }}
-              railStyle={{ backgroundColor: '#374151', height: 10 }}
-            />
-            <p className="text-center text-xs text-slate-500 mt-2">
-              Drag the slider to cast your vote
-            </p>
-          </div>
+            >
+              Agree
+            </button>
+            <button
+              className="px-4 py-2 text-white rounded-full bg-red-600 hover:bg-red-700"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleVote('disagree');
+              }}
+            >
+              Disagree
+            </button>
+          </>
         )}
       </div>
+
+      {userVote && (
+        <p className="text-center text-xs text-slate-400 mt-2">
+          {agreePercentage}% Agreed ({totalVotes} total votes)
+        </p>
+      )}
     </div>
   );
 
-  return isLink ? (
-    <Link href={`/post/${post.id}`} key={post.id}>
-      {CardContent}
-    </Link>
-  ) : (
-    CardContent
-  );
+  return isLink ? <Link href={`/post/${post.id}`}>{CardContent}</Link> : CardContent;
 };
 
 export default PostCard;
