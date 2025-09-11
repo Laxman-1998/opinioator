@@ -1,8 +1,9 @@
 import { Comment } from '../lib/types';
+import AnonymousCircle from './AnonymousCircle'; // Adjust import path if needed
 
 type CommentListProps = {
   comments: Comment[];
-  onReplyClick?: (commentId: number) => void; // New optional callback prop
+  onReplyClick?: (commentId: number) => void;
 };
 
 const CommentList = ({ comments, onReplyClick }: CommentListProps) => {
@@ -19,21 +20,23 @@ const CommentList = ({ comments, onReplyClick }: CommentListProps) => {
     <div className="flex flex-col gap-4">
       {parentComments.map((comment) => (
         <div key={comment.id} className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
-          <p className="text-sm text-slate-400 font-bold">{comment.anonymous_name} said:</p>
+          <div className="mb-1">
+            <AnonymousCircle anonymousName={comment.anonymous_name || ''} />
+          </div>
           <p className="text-slate-200 mt-2">{comment.content}</p>
-
           <button
             className="mt-2 text-xs text-blue-400 hover:underline"
             onClick={() => onReplyClick && onReplyClick(comment.id)}
           >
             Reply
           </button>
-
           {repliesByParentId[comment.id] && (
             <div className="ml-6 mt-4 flex flex-col gap-3 border-l border-slate-700 pl-4">
               {repliesByParentId[comment.id].map((reply) => (
                 <div key={reply.id} className="bg-slate-700/50 p-3 rounded-md border border-slate-600">
-                  <p className="text-xs text-slate-300 font-semibold">{reply.anonymous_name} replied:</p>
+                  <div className="mb-1">
+                    <AnonymousCircle anonymousName={reply.anonymous_name || ''} />
+                  </div>
                   <p className="text-slate-300 mt-1">{reply.content}</p>
                 </div>
               ))}

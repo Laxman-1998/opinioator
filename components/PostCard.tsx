@@ -1,24 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Post } from '../lib/types';
 import Link from 'next/link';
+import AnonymousCircle from './AnonymousCircle'; // Adjust import path if needed
 
-// Utility to get colored circle with initial
-const animalInitialColors: Record<string, string> = {
-  P: '#ef4444', // red
-  C: '#3b82f6', // blue
-  N: '#10b981', // green
-  M: '#f59e0b', // amber
-  // Add more as needed
-};
-
-const getAnimalInitialAndColor = (name: string) => {
-  if (!name) return { initial: '?', color: '#9ca3af' };
-  const initial = name.charAt(0).toUpperCase();
-  const color = animalInitialColors[initial] || '#6366f1'; // default indigo
-  return { initial, color };
-};
-
-// Updated type with commentCount for private comments badge
 type PostCardProps = {
   post: Post;
   isLink?: boolean;
@@ -57,41 +41,25 @@ const PostCard = ({ post, isLink = true, commentCount }: PostCardProps) => {
   const totalVotes = agreeCount + disagreeCount;
   const agreePercentage = totalVotes === 0 ? 50 : Math.round((agreeCount / totalVotes) * 100);
 
-  const { initial, color } = getAnimalInitialAndColor(currentPost.anonymous_name || '');
-
   const CardContent = (
     <div
       className={`bg-slate-900/50 p-5 rounded-lg border border-slate-800 transition-colors ${
         isLink ? 'cursor-pointer hover:border-blue-500' : ''
       }`}
     >
-      {/* Anonymous name display */}
+      {/* Anonymous name with custom circle display */}
       {currentPost.anonymous_name && (
-        <p className="text-slate-400 text-sm italic mb-2">{currentPost.anonymous_name}</p>
+        <div className="mb-2">
+          <AnonymousCircle anonymousName={currentPost.anonymous_name} />
+        </div>
       )}
 
       {/* Post content */}
       <p className="text-slate-200 text-lg">{currentPost.content}</p>
 
-      {/* Private Comment badge with colored circle icon */}
+      {/* Private comment badge */}
       <div className="flex items-center justify-end mt-3">
-        <span
-          className="flex items-center justify-center rounded-full text-xs font-semibold shadow"
-          style={{
-            minWidth: '40px',
-            height: '24px',
-            backgroundColor: '#4f46e5',
-            color: '#dbd4f7',
-            gap: '6px',
-            padding: '0 8px',
-          }}
-        >
-          <span
-            className="flex items-center justify-center rounded-full w-6 h-6 font-bold"
-            style={{ backgroundColor: color }}
-          >
-            {initial}
-          </span>
+        <span className="px-3 py-1 bg-indigo-800/70 rounded-full text-xs text-indigo-100 font-semibold shadow">
           {typeof commentCount === 'number'
             ? commentCount === 0
               ? 'No private comments'
