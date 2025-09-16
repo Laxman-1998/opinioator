@@ -8,7 +8,7 @@ import AnonymousCircle from '../components/AnonymousCircle';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 
-// Dashboard post card with AnonymousCircle
+// Dashboard post card with AnonymousCircle for consistent display
 const DashboardPostCard = ({ post, onClick, index }: { post: Post; onClick: () => void; index: number }) => {
   const agreeCount = post.agree_count ?? 0;
   const disagreeCount = post.disagree_count ?? 0;
@@ -24,7 +24,7 @@ const DashboardPostCard = ({ post, onClick, index }: { post: Post; onClick: () =
       transition={{ type: 'spring', stiffness: 100, damping: 20, delay: index * 0.05 }}
       whileHover={{ scale: 1.03, borderColor: '#3b82f6', boxShadow: '0 0 20px rgba(59, 130, 246, 0.2)' }}
     >
-      {/* Display the anonymous name circle */}
+      {/* Use AnonymousCircle for anonymous name + emoji circle */}
       {post.anonymous_name && (
         <div className="mb-2">
           <AnonymousCircle anonymousName={post.anonymous_name} />
@@ -89,7 +89,7 @@ export default function DashboardPage() {
 
   return (
     <div className="relative">
-      {/* New Starfield Background */}
+      {/* Starfield Background */}
       <div className="fixed top-0 left-0 w-full h-full -z-10">
         <div className="stars-container">
           <div className="stars1"></div>

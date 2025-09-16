@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabaseClient';
 
 type CommentFormProps = {
   postId: number;
-  parentId?: number | null;
+  parentId?: number | null;  // For replies, optional
   onCommentSuccess: () => void;
 };
 
@@ -61,7 +61,7 @@ const CommentForm = ({ postId, parentId = null, onCommentSuccess }: CommentFormP
       }
       toast.success('Comment posted!');
       setContent('');
-      onCommentSuccess();
+      onCommentSuccess();  // trigger refresh in parent
     } catch (error) {
       console.error(error);
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
