@@ -1,14 +1,14 @@
-// pages/dashboard.tsx
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../lib/auth';
 import { Post } from '../lib/types';
 import PostCard from '../components/PostCard';
+import AnonymousCircle from '../components/AnonymousCircle';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 
-// ✅ Dashboard post card (now shows anonymous name)
+// Dashboard post card with AnonymousCircle
 const DashboardPostCard = ({ post, onClick, index }: { post: Post; onClick: () => void; index: number }) => {
   const agreeCount = post.agree_count ?? 0;
   const disagreeCount = post.disagree_count ?? 0;
@@ -24,11 +24,11 @@ const DashboardPostCard = ({ post, onClick, index }: { post: Post; onClick: () =
       transition={{ type: 'spring', stiffness: 100, damping: 20, delay: index * 0.05 }}
       whileHover={{ scale: 1.03, borderColor: '#3b82f6', boxShadow: '0 0 20px rgba(59, 130, 246, 0.2)' }}
     >
-      {/* ✅ Show anonymous_name if available */}
+      {/* Display the anonymous name circle */}
       {post.anonymous_name && (
-        <p className="text-slate-400 text-sm italic mb-2">
-          {post.anonymous_name}
-        </p>
+        <div className="mb-2">
+          <AnonymousCircle anonymousName={post.anonymous_name} />
+        </div>
       )}
 
       <p className="text-white font-semibold text-lg mb-4 line-clamp-4">{post.content}</p>
@@ -61,6 +61,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshCount, setRefreshCount] = useState(0);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
 
   useEffect(() => {
@@ -72,18 +73,19 @@ export default function DashboardPage() {
     const getMyPosts = async () => {
       if (user) {
         setLoading(true);
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('posts')
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
-        if (data) setPosts(data);
+        if (error) console.error('Error fetching dashboard posts:', error);
+        else if (data) setPosts(data);
         setLoading(false);
       }
     };
 
     if (user) getMyPosts();
-  }, [user, authLoading, router]);
+  }, [user, authLoading, router, refreshCount]);
 
   return (
     <div className="relative">

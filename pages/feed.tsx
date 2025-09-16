@@ -1,4 +1,3 @@
-// pages/feed.tsx
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import PostForm from '../components/PostForm';
