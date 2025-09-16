@@ -1,5 +1,5 @@
 import { Comment } from '../lib/types';
-import AnonymousCircle from './AnonymousCircle'; // Adjust import path if needed
+import AnonymousCircle from './AnonymousCircle';
 
 type CommentListProps = {
   comments: Comment[];

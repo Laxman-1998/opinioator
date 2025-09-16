@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabaseClient';
 
 type CommentFormProps = {
   postId: number;
-  parentId?: number | null;  // new optional prop for replies
+  parentId?: number | null;
   onCommentSuccess: () => void;
 };
 

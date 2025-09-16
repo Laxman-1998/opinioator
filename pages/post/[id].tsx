@@ -20,7 +20,7 @@ const PostPage = () => {
   const [hasCommented, setHasCommented] = useState(false);
   const [refreshCount, setRefreshCount] = useState(0);
 
-  // New state to track which comment is being replied to
+  // Track which comment is being replied to
   const [replyToCommentId, setReplyToCommentId] = useState<number | null>(null);
 
   const fetchPostAndComments = async () => {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Post } from '../lib/types';
 import Link from 'next/link';
-import AnonymousCircle from './AnonymousCircle'; // Adjust import path if needed
+import AnonymousCircle from './AnonymousCircle';
 
 type PostCardProps = {
   post: Post;
@@ -47,7 +47,7 @@ const PostCard = ({ post, isLink = true, commentCount }: PostCardProps) => {
         isLink ? 'cursor-pointer hover:border-blue-500' : ''
       }`}
     >
-      {/* Anonymous name with custom circle display */}
+      {/* Anonymous name display with circle */}
       {currentPost.anonymous_name && (
         <div className="mb-2">
           <AnonymousCircle anonymousName={currentPost.anonymous_name} />
@@ -68,7 +68,7 @@ const PostCard = ({ post, isLink = true, commentCount }: PostCardProps) => {
         </span>
       </div>
 
-      {/* Voting segmented UI */}
+      {/* Voting buttons */}
       <div className="mt-6 pt-4 border-t border-slate-800 flex justify-center gap-6">
         {userVote ? (
           <>
